@@ -1,0 +1,12 @@
+com\goodminton\repository\ProductRepository.class
+com\goodminton\entity\Category.class
+com\goodminton\entity\Product.class
+com\goodminton\entity\ReturnRequest.class
+com\goodminton\entity\Review.class
+com\goodminton\repository\CategoryRepository.class
+com\goodminton\entity\OrderDetail.class
+com\goodminton\entity\User.class
+com\goodminton\entity\Order.class
+com\goodminton\config\DataInitializer.class
+com\goodminton\WebsiteGoodmintonApplication.class
+com\goodminton\controller\HomeController.class

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goodminton - Shop Dụng Cụ Cầu Lông Cao Cấp</title>
+    <!-- Google Font & FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="header-container">
+            <a th:href="@{/}" class="logo">
+                <img th:src="@{/images/logo.jpg}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                Good<span>minton</span>
+            </a>
+            
+            <!-- Search Bar -->
+            <form th:action="@{/}" method="get" class="search-form">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm kiếm vợt, giày, phụ kiện..." class="search-input">
+                <button type="submit" class="search-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+
+            <div class="header-actions">
+                <!-- Tra cứu đơn hàng link -->
+                <a href="#" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
+                    <i class="fa-solid fa-truck" style="margin-right: 5px;"></i> Tra cứu
+                </a>
+                <!-- Cart Button -->
+                <button class="cart-icon-btn" onclick="toggleCart(true)">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span class="cart-badge" id="cartCount">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="hero">
+        <div class="hero-content">
+            <p class="hero-subtitle">Bứt phá giới hạn</p>
+            <h1 class="hero-title">Chinh phục mọi trận đấu</h1>
+            <p class="hero-desc">Trang bị dụng cụ thi đấu cầu lông chính hãng với thông số kỹ thuật tối ưu và minh bạch.</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="shop-container">
+        <!-- Sidebar Filters -->
+        <aside class="sidebar">
+            <!-- Filter by Category -->
+            <div class="filter-group">
+                <h3 class="filter-title">Danh Mục</h3>
+                <ul class="filter-list">
+                    <li class="filter-item">
+                        <a th:href="@{/}" class="filter-link" th:classappend="${selectedCategory == null ? 'active' : ''}">
+                            <span>Tất cả</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="filter-item" th:each="cat : ${categories}">
+                        <a th:href="@{/(categoryId=${cat.id})}" class="filter-link" th:classappend="${selectedCategory == cat.id ? 'active' : ''}">
+                            <span th:text="${cat.name}">Tên Danh Mục</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Reset Filters -->
+            <a th:href="@{/}" class="reset-filter-btn">Xóa Bộ Lọc</a>
+        </aside>
+
+        <!-- Product Grid -->
+        <section class="products-section">
+            <div class="products-grid">
+                <!-- Loop qua danh sách sản phẩm từ Controller -->
+                <div class="product-card" th:each="prod : ${products}">
+                    <div class="product-image-wrapper">
+                        <img th:src="${prod.imageUrl}" th:alt="${prod.name}" class="product-img" onerror="this.src='/images/logo.jpg'; this.style.objectFit='contain'; this.style.padding='20px'; this.style.opacity='0.3';">
+                        <span class="product-badge" th:if="${prod.category != null}" th:text="${prod.category.name}">Danh mục</span>
+                    </div>
+                    <div class="product-info">
+                        <h4 class="product-name" th:text="${prod.name}">Tên sản phẩm</h4>
+                        
+                        <!-- Badminton Specs pills -->
+                        <div class="product-specs" th:if="${prod.weight != 'N/A'}">
+                            <span class="spec-pill" th:text="${prod.weight}">4U</span>
+                            <span class="spec-pill" th:text="${prod.tension}">28 Lbs</span>
+                            <span class="spec-pill" th:text="${prod.balancePoint}">Nặng đầu</span>
+                        </div>
+                        
+                        <div class="product-bottom">
+                            <span class="product-price" th:text="${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT') + 'đ'}">4.250.000đ</span>
+                            <!-- Nút thêm giỏ hàng có thuộc tính data để JS xử lý -->
+                            <button class="add-cart-btn" 
+                                    th:attr="data-id=${prod.id}, data-name=${prod.name}, data-price=${prod.price}, data-img=${prod.imageUrl}" 
+                                    onclick="addToCart(this)">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trường hợp không tìm thấy sản phẩm -->
+            <div th:if="${products.isEmpty()}" style="text-align: center; padding: 40px; color: var(--text-gray);">
+                <i class="fa-solid fa-face-frown" style="font-size: 48px; color: var(--primary); margin-bottom: 15px;"></i>
+                <p>Không tìm thấy sản phẩm nào phù hợp.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Sliding Cart Drawer -->
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart(false)"></div>
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cart-header">
+            <h3 class="cart-title">Giỏ Hàng</h3>
+            <button class="close-cart-btn" onclick="toggleCart(false)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <!-- Cart Items Container -->
+        <div class="cart-items" id="cartItemsList">
+            <!-- Dòng sản phẩm trong giỏ sẽ sinh ra từ Javascript ở đây -->
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total-wrapper">
+                <span>Tổng cộng:</span>
+                <span class="cart-total-price" id="cartTotalPrice">0đ</span>
+            </div>
+            <button class="checkout-btn" onclick="proceedToCheckout()">Thanh toán ngay</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-text">© 2026 <span>Goodminton</span>. Thiết kế bởi Nhóm 03 - Đồ án Thương mại điện tử.</p>
+    </footer>
+
+    <!-- JavaScript xử lý Giỏ hàng Động (Mục 3.1.2) -->
+    <script>
+        // Khởi tạo giỏ hàng từ LocalStorage
+        let cart = JSON.parse(localStorage.getItem('goodminton_cart')) || [];
+
+        function saveCart() {
+            localStorage.setItem('goodminton_cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        function toggleCart(open) {
+            const drawer = document.getElementById('cartDrawer');
+            const overlay = document.getElementById('cartOverlay');
+            if (open) {
+                drawer.classList.add('open');
+                overlay.classList.add('show');
+            } else {
+                drawer.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+        }
+
+        function addToCart(btn) {
+            const id = btn.getAttribute('data-id');
+            const name = btn.getAttribute('data-name');
+            const price = parseFloat(btn.getAttribute('data-price'));
+            const img = btn.getAttribute('data-img');
+
+            // Kiểm tra xem sản phẩm đã có trong giỏ chưa
+            const existingItem = cart.find(item => item.id === id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ id, name, price, img, quantity: 1 });
+            }
+
+            saveCart();
+            toggleCart(true); // Tự động mở giỏ hàng ra cho khách xem
+        }
+
+        function updateQty(id, change) {
+            const item = cart.find(item => item.id === id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    cart = cart.filter(item => item.id !== id);
+                }
+                saveCart();
+            }
+        }
+
+        function removeItem(id) {
+            cart = cart.filter(item => item.id !== id);
+            saveCart();
+        }
+
+        function renderCart() {
+            const listContainer = document.getElementById('cartItemsList');
+            const cartCountBadge = document.getElementById('cartCount');
+            const totalContainer = document.getElementById('cartTotalPrice');
+
+            listContainer.innerHTML = '';
+            let total = 0;
+            let count = 0;
+
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                count += item.quantity;
+
+                const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.price) + 'đ';
+                const itemHTML = `
+                    <div class="cart-item">
+                        <img src="${item.img}" alt="${item.name}" class="cart-item-img">
+                        <div class="cart-item-detail">
+                            <h4 class="cart-item-name">${item.name}</h4>
+                            <span class="cart-item-price">${formattedPrice}</span>
+                            <div class="cart-item-qty">
+                                <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
+                                <span class="qty-val">${item.quantity}</span>
+                                <button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button>
+                            </div>
+                        </div>
+                        <button class="cart-item-remove" onclick="removeItem('${item.id}')">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                listContainer.innerHTML += itemHTML;
+            });
+
+            cartCountBadge.textContent = count;
+            totalContainer.textContent = new Intl.NumberFormat('vi-VN').format(total) + 'đ';
+        }
+
+        function proceedToCheckout() {
+            if (cart.length === 0) {
+                alert('Giỏ hàng của bạn đang trống!');
+                return;
+            }
+            alert('Đang chuyển hướng đến trang thanh toán...');
+            // Khi có màn hình Checkout, chúng ta sẽ chuyển hướng về /checkout
+        }
+
+        // Render giỏ hàng lần đầu khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCart();
+        });
+    </script>
+</body>
+</html>
