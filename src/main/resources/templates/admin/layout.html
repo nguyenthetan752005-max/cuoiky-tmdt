@@ -157,6 +157,16 @@
             <i class="fas fa-clipboard-list"></i>
             <span>Đơn hàng</span>
         </a>
+        <a th:href="@{/admin/reviews}" class="sidebar-nav__link"
+           th:classappend="${currentPage == 'reviews'} ? 'sidebar-nav__link--active'">
+            <i class="fas fa-star"></i>
+            <span>Đánh giá</span>
+        </a>
+        <a th:href="@{/admin/returns}" class="sidebar-nav__link"
+           th:classappend="${currentPage == 'returns'} ? 'sidebar-nav__link--active'">
+            <i class="fas fa-rotate-left"></i>
+            <span>Đổi/Trả hàng</span>
+        </a>
 
         <div class="sidebar-separator"></div>
 
@@ -241,7 +251,7 @@
 
     <div class="topbar-user">
         <span>Xin chào,</span>
-        <span class="topbar-user__name" th:text="${session.adminUser != null ? session.adminUser : 'Admin'}">Admin</span>
+        <span class="topbar-user__name" th:text="${session.adminUser != null ? session.adminUser.username : 'Admin'}">Admin</span>
         <div class="topbar-user__avatar">
             <i class="fas fa-user-shield"></i>
         </div>

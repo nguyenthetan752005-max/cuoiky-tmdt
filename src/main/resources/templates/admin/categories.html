@@ -219,7 +219,7 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(69, 243, 255, 0.08);
             border-radius: 16px;
-            overflow: hidden;
+            overflow-x: auto;
         }
 
         .table-card__header {
@@ -404,7 +404,7 @@
                 <div class="table-card__header">
                     <div class="section-header" style="margin-bottom: 0;">
                         <div class="section-header__bar"></div>
-                        <h2 class="section-header__title">Danh sách danh mục</h2>
+                        <h2 class="section-header__title">Danh sách danh mục (<span th:text="${categories.size()}"></span>)</h2>
                     </div>
                 </div>
 

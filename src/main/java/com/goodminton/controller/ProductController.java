@@ -1,7 +1,7 @@
 package com.goodminton.controller;
 
 import com.goodminton.entity.Product;
-import com.goodminton.repository.ProductRepository;
+import com.goodminton.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,18 +14,18 @@ import java.util.List;
 public class ProductController {
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
 
     @GetMapping("/product/{id}")
     public String productDetail(@PathVariable("id") Long id, Model model) {
-        Product product = productRepository.findById(id).orElse(null);
+        Product product = productService.findById(id).orElse(null);
         
         if (product == null) {
             return "redirect:/"; // Quay về trang chủ nếu sản phẩm không tồn tại
         }
 
         // Lấy các sản phẩm cùng danh mục để gợi ý (Có thể bạn cũng thích)
-        List<Product> relatedProducts = productRepository.findByCategoryId(product.getCategory().getId());
+        List<Product> relatedProducts = productService.findByCategoryId(product.getCategory().getId());
         
         // Loại bỏ sản phẩm hiện tại khỏi danh sách gợi ý và chỉ lấy tối đa 4 sản phẩm
         relatedProducts.removeIf(p -> p.getId().equals(product.getId()));

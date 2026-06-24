@@ -2,8 +2,8 @@ package com.goodminton.controller;
 
 import com.goodminton.entity.Category;
 import com.goodminton.entity.Product;
-import com.goodminton.repository.CategoryRepository;
-import com.goodminton.repository.ProductRepository;
+import com.goodminton.service.CategoryService;
+import com.goodminton.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,10 +16,10 @@ import java.util.List;
 public class HomeController {
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryService categoryService;
 
     @GetMapping("/")
     public String index(
@@ -27,16 +27,16 @@ public class HomeController {
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             Model model) {
         
-        List<Category> categories = categoryRepository.findAll();
+        List<Category> categories = categoryService.findAll();
         List<Product> products;
 
         // Xử lý tìm kiếm và lọc cơ bản
         if (keyword != null && !keyword.trim().isEmpty()) {
-            products = productRepository.findByNameContainingIgnoreCase(keyword);
+            products = productService.findByNameContainingIgnoreCase(keyword);
         } else if (categoryId != null) {
-            products = productRepository.findByCategoryId(categoryId);
+            products = productService.findByCategoryId(categoryId);
         } else {
-            products = productRepository.findAll();
+            products = productService.findAll();
         }
 
         model.addAttribute("categories", categories);

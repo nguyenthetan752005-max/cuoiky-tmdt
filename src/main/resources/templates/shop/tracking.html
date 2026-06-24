@@ -51,6 +51,20 @@
         .alert-success i { font-size: 32px; color: var(--accent); margin-bottom: 15px; text-shadow: var(--shadow-neon-green); }
         .alert-success h3 { color: var(--text-white); margin-bottom: 10px; font-size: 20px; }
         .alert-success p { color: var(--text-gray); }
+
+        /* Return Request Form */
+        .return-section { margin-top: 30px; padding: 25px; background: rgba(255,152,0,0.08); border: 1px solid rgba(255,152,0,0.25); border-radius: 14px; }
+        .return-section h3 { color: #ffb74d; margin-bottom: 6px; font-size: 1.05rem; }
+        .return-section p.return-desc { color: var(--text-gray); font-size: 0.88rem; margin-bottom: 20px; }
+        .return-form-group { margin-bottom: 16px; }
+        .return-form-group label { display: block; margin-bottom: 6px; color: var(--text-gray); font-size: 0.85rem; font-weight: 500; }
+        .return-form-group textarea, .return-form-group input { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: var(--text-white); font-size: 0.9rem; font-family: inherit; outline: none; transition: border-color 0.3s; }
+        .return-form-group textarea:focus, .return-form-group input:focus { border-color: #ffb74d; }
+        .return-form-group textarea::placeholder, .return-form-group input::placeholder { color: rgba(197,198,199,0.4); }
+        .btn-submit-return { padding: 12px 28px; background: linear-gradient(45deg, #ff9800, #ffb74d); color: #1a1a2e; border: none; border-radius: 10px; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-submit-return:hover { filter: brightness(1.1); box-shadow: 0 0 14px rgba(255,152,0,0.35); }
+        .btn-submit-return:disabled { opacity: 0.5; cursor: not-allowed; }
+        .return-success { margin-top: 15px; padding: 14px; background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.3); border-radius: 10px; color: #81c784; font-size: 0.9rem; display: none; }
     </style>
 </head>
 <body>
@@ -127,6 +141,36 @@
                     <h3>Cảm ơn bạn đã đặt hàng!</h3>
                     <p>Goodminton đã tiếp nhận thông tin và sẽ sớm liên hệ để xác nhận đơn hàng của bạn.</p>
                 </div>
+
+                <!-- ==================== YÊU CẦU ĐỔI/TRẢ (Mục 3.4.2) ==================== -->
+                <!-- Chỉ hiển thị khi đơn hàng đã giao thành công (DELIVERED) -->
+                <div th:if="${order.status == 'DELIVERED'}" class="return-section" id="returnSection">
+                    <h3><i class="fa-solid fa-rotate-left" style="margin-right: 8px;"></i>Yêu cầu Đổi / Trả hàng</h3>
+                    <p class="return-desc">Nếu sản phẩm bị lỗi hoặc giao sai, bạn có thể gửi yêu cầu đổi trả. Vui lòng mô tả rõ lý do và đính kèm bằng chứng (nếu có).</p>
+                    
+                    <form id="returnForm" onsubmit="submitReturn(event)">
+                        <input type="hidden" id="returnOrderCode" th:value="${order.orderCode}">
+                        
+                        <div class="return-form-group">
+                            <label for="returnReason">Lý do đổi/trả <span style="color:#ff4444;">*</span></label>
+                            <textarea id="returnReason" rows="3" placeholder="Ví dụ: Giao sai hàng, vợt bị gãy khi mở hộp, xước sơn..." required></textarea>
+                        </div>
+
+                        <div class="return-form-group">
+                            <label for="returnVideo">Link video/ảnh mở hộp (tuỳ chọn)</label>
+                            <input type="url" id="returnVideo" placeholder="https://drive.google.com/... hoặc https://youtube.com/...">
+                        </div>
+
+                        <button type="submit" class="btn-submit-return" id="btnSubmitReturn">
+                            <i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu đổi/trả
+                        </button>
+                    </form>
+
+                    <div class="return-success" id="returnSuccess">
+                        <i class="fa-solid fa-circle-check" style="margin-right: 8px;"></i>
+                        <span id="returnSuccessMsg"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -134,6 +178,45 @@
     <footer>
         <p class="footer-text">© 2026 <span>Goodminton</span>. Thiết kế bởi Nhóm 03 - Đồ án Thương mại điện tử.</p>
     </footer>
+
+    <script>
+        async function submitReturn(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitReturn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+
+            const body = {
+                orderCode: document.getElementById('returnOrderCode').value,
+                reason: document.getElementById('returnReason').value.trim(),
+                videoProofUrl: document.getElementById('returnVideo').value.trim() || null
+            };
+
+            try {
+                const res = await fetch('/api/returns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('returnForm').style.display = 'none';
+                    const successEl = document.getElementById('returnSuccess');
+                    successEl.style.display = 'block';
+                    document.getElementById('returnSuccessMsg').textContent = data.message;
+                } else {
+                    alert('Lỗi: ' + data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu đổi/trả';
+                }
+            } catch (err) {
+                alert('Có lỗi xảy ra, vui lòng thử lại!');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu đổi/trả';
+            }
+        }
+    </script>
 
 </body>
 </html>
