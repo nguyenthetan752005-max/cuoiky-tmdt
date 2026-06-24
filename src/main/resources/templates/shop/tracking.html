@@ -142,6 +142,28 @@
                     <p>Goodminton đã tiếp nhận thông tin và sẽ sớm liên hệ để xác nhận đơn hàng của bạn.</p>
                 </div>
 
+                <!-- ==================== LỊCH SỬ KHIẾU NẠI ==================== -->
+                <div th:if="${returnRequests != null && !returnRequests.isEmpty()}" class="return-section" style="background: rgba(33, 150, 243, 0.08); border-color: rgba(33, 150, 243, 0.25);">
+                    <h3 style="color: #64b5f6;"><i class="fa-solid fa-clock-rotate-left" style="margin-right: 8px;"></i>Lịch sử khiếu nại / Đổi trả</h3>
+                    
+                    <div th:each="req : ${returnRequests}" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="color: var(--text-gray); font-size: 0.85rem;" th:text="${#dates.format(req.requestDate, 'dd-MM-yyyy HH:mm')}">Thời gian</span>
+                            
+                            <!-- Status Badges -->
+                            <span th:if="${req.status == 'PENDING'}" style="padding: 4px 12px; background: rgba(255, 193, 7, 0.2); color: #ffc107; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">ĐANG CHỜ DUYỆT</span>
+                            <span th:if="${req.status == 'APPROVED'}" style="padding: 4px 12px; background: rgba(76, 175, 80, 0.2); color: #4caf50; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">ĐÃ ĐƯỢC DUYỆT</span>
+                            <span th:if="${req.status == 'REJECTED'}" style="padding: 4px 12px; background: rgba(244, 67, 54, 0.2); color: #f44336; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">ĐÃ BỊ TỪ CHỐI</span>
+                        </div>
+                        
+                        <p style="color: var(--text-white); font-size: 0.95rem; margin-bottom: 8px;"><strong>Lý do:</strong> <span th:text="${req.reason}">Lý do</span></p>
+                        
+                        <a th:if="${req.videoProofUrl != null && !req.videoProofUrl.isEmpty()}" th:href="${req.videoProofUrl}" target="_blank" style="color: #64b5f6; font-size: 0.9rem; text-decoration: none;">
+                            <i class="fa-solid fa-video" style="margin-right: 5px;"></i> Xem bằng chứng
+                        </a>
+                    </div>
+                </div>
+
                 <!-- ==================== YÊU CẦU ĐỔI/TRẢ (Mục 3.4.2) ==================== -->
                 <!-- Chỉ hiển thị khi đơn hàng đã giao thành công (DELIVERED) -->
                 <div th:if="${order.status == 'DELIVERED'}" class="return-section" id="returnSection">

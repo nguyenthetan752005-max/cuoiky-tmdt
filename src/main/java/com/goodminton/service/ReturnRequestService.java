@@ -26,6 +26,10 @@ public class ReturnRequestService {
         return returnRequestRepository.findAllByOrderByRequestDateDesc();
     }
 
+    public List<ReturnRequest> findByOrderId(Long orderId) {
+        return returnRequestRepository.findByOrderId(orderId);
+    }
+
     public List<ReturnRequest> findByStatus(String status) {
         return returnRequestRepository.findByStatus(status);
     }

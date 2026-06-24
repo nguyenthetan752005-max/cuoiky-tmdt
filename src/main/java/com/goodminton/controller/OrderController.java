@@ -3,7 +3,9 @@ package com.goodminton.controller;
 import com.goodminton.dto.CartItemDto;
 import com.goodminton.dto.CheckoutRequest;
 import com.goodminton.entity.Order;
+import com.goodminton.entity.ReturnRequest;
 import com.goodminton.service.OrderService;
+import com.goodminton.service.ReturnRequestService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,6 +22,9 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private ReturnRequestService returnRequestService;
 
     @GetMapping("/checkout")
     public String checkoutPage() {
@@ -48,7 +54,11 @@ public class OrderController {
     public String trackingResult(@RequestParam("orderCode") String orderCode, Model model) {
         Optional<Order> orderOpt = orderService.findByOrderCode(orderCode.trim());
         if (orderOpt.isPresent()) {
-            model.addAttribute("order", orderOpt.get());
+            Order order = orderOpt.get();
+            model.addAttribute("order", order);
+            // Lấy danh sách khiếu nại của đơn hàng này
+            List<ReturnRequest> returnRequests = returnRequestService.findByOrderId(order.getId());
+            model.addAttribute("returnRequests", returnRequests);
         } else {
             model.addAttribute("error", "Không tìm thấy đơn hàng với mã " + orderCode);
         }
