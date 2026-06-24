@@ -56,6 +56,10 @@
             </form>
 
             <div class="header-actions">
+                <!-- Voucher link -->
+                <a th:href="@{/vouchers}" style="font-weight: 600; font-size: 15px; color: var(--accent);" class="filter-link">
+                    <i class="fa-solid fa-ticket" style="margin-right: 5px;"></i> Kho Ưu đãi
+                </a>
                 <!-- Tra cứu đơn hàng link -->
                 <a th:href="@{/tracking}" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
                     <i class="fa-solid fa-truck" style="margin-right: 5px;"></i> Tra cứu
@@ -310,6 +314,14 @@
         // Render giỏ hàng lần đầu khi tải trang
         document.addEventListener('DOMContentLoaded', () => {
             renderCart();
+        });
+
+        // Đồng bộ giỏ hàng giữa các Tab (Cross-Tab Sync)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'goodminton_cart') {
+                cart = JSON.parse(e.newValue) || [];
+                renderCart();
+            }
         });
     </script>
 

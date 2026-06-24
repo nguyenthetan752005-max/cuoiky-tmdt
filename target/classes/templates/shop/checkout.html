@@ -65,11 +65,19 @@
 
     <!-- Header Section -->
     <header>
-        <div class="header-container" style="justify-content: center;">
+        <div class="header-container">
             <a th:href="@{/}" class="logo" style="display: flex; align-items: center; gap: 10px;">
                 <img th:src="@{/images/logo.jpg}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
                 <span th:text="${globalConfig != null ? globalConfig.storeName : 'Goodminton'}">Goodminton</span>
             </a>
+            <div class="header-actions">
+                <a th:href="@{/vouchers}" style="font-weight: 600; font-size: 15px; color: var(--accent);" class="filter-link">
+                    <i class="fa-solid fa-ticket" style="margin-right: 5px;"></i> Kho Ưu đãi
+                </a>
+                <a th:href="@{/}" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
+                    <i class="fa-solid fa-store" style="margin-right: 5px;"></i> Tiếp tục mua hàng
+                </a>
+            </div>
         </div>
     </header>
 
@@ -294,11 +302,90 @@
             renderCheckoutCart();
         });
 
+        // Đồng bộ giỏ hàng real-time giữa các Tab (Cross-Tab Sync)
+        // Khi người dùng thêm/xóa hàng ở Tab khác → cảnh báo và đẩy về trang chủ
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'goodminton_cart') {
+                const newCart = JSON.parse(e.newValue) || [];
+                const oldCartStr = JSON.stringify(cart);
+                const newCartStr = JSON.stringify(newCart);
+                
+                if (oldCartStr !== newCartStr) {
+                    // Hiển thị cảnh báo và chuyển hướng về trang chủ
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Giỏ hàng đã thay đổi!',
+                            html: `<div style="text-align:left; font-size: 0.92rem;">
+                                <p style="margin-bottom: 12px;">Giỏ hàng của bạn vừa bị <strong style="color:#ff5252;">thay đổi từ một tab khác</strong> trong khi bạn đang thanh toán.</p>
+                                <p style="margin-bottom: 12px;">Để đảm bảo đơn hàng chính xác, hệ thống sẽ đưa bạn về trang chủ với giỏ hàng mới nhất.</p>
+                                <p style="color: var(--text-gray); font-size: 0.85rem;"><i class="fa-solid fa-circle-info" style="margin-right: 5px;"></i>Mẹo: Hãy chỉ thao tác trên 1 tab khi mua hàng nhé!</p>
+                            </div>`,
+                            icon: 'error',
+                            confirmButtonText: 'Về trang chủ',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then(() => {
+                            window.location.href = '/';
+                        });
+                    } else {
+                        window.location.href = '/';
+                    }
+                }
+            }
+        });
+
+        // Hàm tạo "chữ ký" (fingerprint) của giỏ hàng để so sánh
+        function cartFingerprint(cartData) {
+            return cartData
+                .map(item => item.id + ':' + item.quantity)
+                .sort()
+                .join('|');
+        }
+
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (cart.length === 0) return alert("Giỏ hàng trống!");
 
             const submitBtn = document.getElementById('submitBtn');
+            
+            // === KIỂM TRA XUNG ĐỘT GIỎ HÀNG TRƯỚC KHI ĐẶT HÀNG ===
+            const latestCart = JSON.parse(localStorage.getItem('goodminton_cart')) || [];
+            const currentFingerprint = cartFingerprint(cart);
+            const latestFingerprint = cartFingerprint(latestCart);
+
+            if (currentFingerprint !== latestFingerprint) {
+                // Giỏ hàng đã bị thay đổi từ tab khác mà storage event chưa kịp cập nhật
+                Swal.fire({
+                    title: 'Đặt hàng không thành công!',
+                    html: `<div style="text-align:left; font-size: 0.92rem;">
+                        <p style="margin-bottom: 12px;">Giỏ hàng của bạn đã bị <strong style="color:#ff5252;">thay đổi từ một tab khác</strong> trong khi bạn đang ở trang thanh toán.</p>
+                        <p style="margin-bottom: 12px;">Để đảm bảo đơn hàng chính xác, hệ thống sẽ đưa bạn về trang chủ với giỏ hàng mới nhất.</p>
+                        <p style="color: var(--text-gray); font-size: 0.85rem;"><i class="fa-solid fa-circle-info" style="margin-right: 5px;"></i>Mẹo: Hãy chỉ thao tác trên 1 tab khi mua hàng nhé!</p>
+                    </div>`,
+                    icon: 'error',
+                    confirmButtonText: 'Về trang chủ',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    window.location.href = '/';
+                });
+                return;
+            }
+
+            // Nếu giỏ hàng trống (có thể bị xóa từ tab khác)
+            if (latestCart.length === 0) {
+                Swal.fire({
+                    title: 'Giỏ hàng trống!',
+                    text: 'Giỏ hàng của bạn đã bị xóa từ tab khác. Vui lòng quay lại trang chủ và thêm sản phẩm.',
+                    icon: 'error',
+                    confirmButtonText: 'Về trang chủ'
+                }).then(() => {
+                    window.location.href = '/';
+                });
+                return;
+            }
+
+            // === MỌI THỨ ĐỀU KHỚP, TIẾN HÀNH ĐẶT HÀNG ===
             submitBtn.disabled = true;
             submitBtn.textContent = 'Đang xử lý...';
 
@@ -308,7 +395,7 @@
                 email: document.getElementById('email').value,
                 shippingAddress: document.getElementById('shippingAddress').value,
                 paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
-                cart: cart,
+                cart: latestCart, // Luôn dùng giỏ hàng mới nhất từ localStorage
                 voucherCode: appliedVoucherCode
             };
 
