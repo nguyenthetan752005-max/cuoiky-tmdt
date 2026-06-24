@@ -6,6 +6,8 @@ import com.goodminton.entity.User;
 import com.goodminton.repository.CategoryRepository;
 import com.goodminton.repository.ProductRepository;
 import com.goodminton.repository.UserRepository;
+import com.goodminton.repository.CategoryRepository;
+import com.goodminton.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;

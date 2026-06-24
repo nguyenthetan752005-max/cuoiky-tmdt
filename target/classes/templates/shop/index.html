@@ -28,7 +28,11 @@
 
             <div class="header-actions">
                 <!-- Tra cứu đơn hàng link -->
+<<<<<<< HEAD
                 <a th:href="@{/tracking}" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
+=======
+                <a href="#" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
+>>>>>>> 9bd0efee92043470686a177c21cdfd27ccc9d40a
                     <i class="fa-solid fa-truck" style="margin-right: 5px;"></i> Tra cứu
                 </a>
                 <!-- Cart Button -->
@@ -81,6 +85,7 @@
             <div class="products-grid">
                 <!-- Loop qua danh sách sản phẩm từ Controller -->
                 <div class="product-card" th:each="prod : ${products}">
+<<<<<<< HEAD
                     <a th:href="@{|/product/${prod.id}|}" class="product-image-wrapper" style="display: block;">
                         <img th:src="${prod.imageUrl}" th:alt="${prod.name}" class="product-img" onerror="this.src='/images/logo.jpg'; this.style.objectFit='contain'; this.style.padding='20px'; this.style.opacity='0.3';">
                         <span class="product-badge" th:if="${prod.category != null}" th:text="${prod.category.name}">Danh mục</span>
@@ -89,6 +94,14 @@
                         <a th:href="@{|/product/${prod.id}|}">
                             <h4 class="product-name" th:text="${prod.name}">Tên sản phẩm</h4>
                         </a>
+=======
+                    <div class="product-image-wrapper">
+                        <img th:src="${prod.imageUrl}" th:alt="${prod.name}" class="product-img" onerror="this.src='/images/logo.jpg'; this.style.objectFit='contain'; this.style.padding='20px'; this.style.opacity='0.3';">
+                        <span class="product-badge" th:if="${prod.category != null}" th:text="${prod.category.name}">Danh mục</span>
+                    </div>
+                    <div class="product-info">
+                        <h4 class="product-name" th:text="${prod.name}">Tên sản phẩm</h4>
+>>>>>>> 9bd0efee92043470686a177c21cdfd27ccc9d40a
                         
                         <!-- Badminton Specs pills -->
                         <div class="product-specs" th:if="${prod.weight != 'N/A'}">
@@ -246,7 +259,12 @@
                 alert('Giỏ hàng của bạn đang trống!');
                 return;
             }
+<<<<<<< HEAD
             window.location.href = '/checkout';
+=======
+            alert('Đang chuyển hướng đến trang thanh toán...');
+            // Khi có màn hình Checkout, chúng ta sẽ chuyển hướng về /checkout
+>>>>>>> 9bd0efee92043470686a177c21cdfd27ccc9d40a
         }
 
         // Render giỏ hàng lần đầu khi tải trang
