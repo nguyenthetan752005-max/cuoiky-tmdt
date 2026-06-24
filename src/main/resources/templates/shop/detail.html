@@ -47,12 +47,18 @@
     </style>
 <body>
 
+    <!-- Global Announcement Banner -->
+    <div th:if="${globalConfig != null and globalConfig.globalAnnouncement != null and !globalConfig.globalAnnouncement.isEmpty()}" 
+         style="background: linear-gradient(90deg, var(--primary), var(--accent)); color: var(--bg-dark); text-align: center; padding: 8px; font-weight: 600; font-size: 0.9rem; overflow: hidden; white-space: nowrap;">
+        <marquee behavior="scroll" direction="left" scrollamount="5" th:text="${globalConfig.globalAnnouncement}"></marquee>
+    </div>
+
     <!-- Header Section -->
     <header>
         <div class="header-container">
-            <a th:href="@{/}" class="logo">
+            <a th:href="@{/}" class="logo" style="display: flex; align-items: center; gap: 10px;">
                 <img th:src="@{/images/logo.jpg}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
-                Good<span>minton</span>
+                <span th:text="${globalConfig != null ? globalConfig.storeName : 'Goodminton'}">Goodminton</span>
             </a>
             
             <form th:action="@{/}" method="get" class="search-form">
@@ -137,16 +143,20 @@
                 </div>
 
                 <div class="purchase-actions">
-                    <div class="qty-selector">
+                    <div class="qty-selector" th:if="${product.stockQuantity > 0}">
                         <button class="qty-btn-large" onclick="changeDetailQty(-1)">-</button>
-                        <input type="number" id="detailQty" value="1" min="1" readonly>
+                        <input type="number" id="detailQty" value="1" min="1" th:max="${product.stockQuantity}" readonly>
                         <button class="qty-btn-large" onclick="changeDetailQty(1)">+</button>
                     </div>
                     
-                    <button class="btn-add-to-cart-large" 
+                    <button th:if="${product.stockQuantity > 0}" class="btn-add-to-cart-large" 
                             th:attr="data-id=${product.id}, data-name=${product.name}, data-price=${product.price}, data-img=${product.imageUrl}" 
                             onclick="addDetailToCart(this)">
                         <i class="fa-solid fa-cart-plus"></i> Thêm Vào Giỏ
+                    </button>
+                    
+                    <button th:if="${product.stockQuantity <= 0}" class="btn-add-to-cart-large" style="background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; cursor: not-allowed; width: 100%;" disabled>
+                        <i class="fa-solid fa-ban"></i> ĐÃ HẾT HÀNG
                     </button>
                 </div>
                 
@@ -182,11 +192,12 @@
                         </div>
                         <div class="product-bottom">
                             <span class="product-price" th:text="${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT') + 'đ'}">4.250.000đ</span>
-                            <button class="add-cart-btn" 
+                            <button th:if="${prod.stockQuantity > 0}" class="add-cart-btn" 
                                     th:attr="data-id=${prod.id}, data-name=${prod.name}, data-price=${prod.price}, data-img=${prod.imageUrl}" 
                                     onclick="addToCart(this)">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
+                            <span th:if="${prod.stockQuantity <= 0}" style="color: #ff4444; font-size: 0.85rem; font-weight: bold; padding: 5px 10px; background: rgba(255,68,68,0.1); border-radius: 8px; border: 1px solid rgba(255,68,68,0.3);">Hết hàng</span>
                         </div>
                     </div>
                 </div>
@@ -386,8 +397,8 @@
                 alert('Giỏ hàng của bạn đang trống!');
                 return;
             }
+            document.querySelector('.checkout-btn').textContent = 'Đang chuyển hướng...';
             window.location.href = '/checkout';
-            alert('Đang chuyển hướng đến trang thanh toán...');
         }
 
         // ==================== REVIEW SYSTEM JS ====================
@@ -517,5 +528,54 @@
             loadReviews();
         });
     </script>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
 </body>
 </html>

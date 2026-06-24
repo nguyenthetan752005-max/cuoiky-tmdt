@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho Voucher - Goodminton</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .voucher-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        .voucher-header { text-align: center; margin-bottom: 40px; }
+        .voucher-header h1 { font-size: 32px; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
+        .voucher-header p { color: var(--text-gray); margin-top: 10px; font-size: 16px; }
+        
+        .voucher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        
+        .voucher-card {
+            background: rgba(31, 40, 51, 0.45); border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px); border-radius: 16px; overflow: hidden;
+            display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: transform 0.3s;
+        }
+        .voucher-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        
+        .voucher-top { background: linear-gradient(135deg, var(--primary) 0%, #00897b 100%); padding: 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px dashed rgba(255,255,255,0.3); position: relative; }
+        .voucher-top::before, .voucher-top::after { content: ''; position: absolute; bottom: -10px; width: 20px; height: 20px; background: var(--bg-dark); border-radius: 50%; }
+        .voucher-top::before { left: -10px; }
+        .voucher-top::after { right: -10px; }
+        
+        .voucher-code { font-size: 24px; font-weight: 800; letter-spacing: 1px; }
+        .voucher-icon { font-size: 30px; opacity: 0.8; }
+        
+        .voucher-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .voucher-desc { font-size: 16px; color: var(--text-white); font-weight: 500; margin-bottom: 15px; line-height: 1.4; }
+        .voucher-min { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; }
+        .voucher-min span { color: var(--accent); font-weight: bold; }
+        
+        .voucher-stats { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; color: var(--text-gray); display: flex; justify-content: space-between; align-items: center; }
+        
+        .badge { padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        .badge-active { background: rgba(76, 175, 80, 0.2); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .badge-expired { background: rgba(244, 67, 54, 0.2); color: #f44336; border: 1px solid rgba(244, 67, 54, 0.3); }
+        .badge-empty { background: rgba(158, 158, 158, 0.2); color: #9e9e9e; border: 1px solid rgba(158, 158, 158, 0.3); }
+        
+        .btn-copy { padding: 8px 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: bold; }
+        .btn-copy:hover { background: var(--primary); color: var(--bg-dark); border-color: var(--primary); }
+        
+        /* Disabled card styles */
+        .card-disabled { opacity: 0.7; filter: grayscale(80%); }
+        .card-disabled .voucher-top { background: linear-gradient(135deg, #757575 0%, #424242 100%); }
+    </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <a th:href="@{/}" class="logo">
+                <img th:src="@{/images/logo.jpg}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                Good<span>minton</span>
+            </a>
+            <div class="header-actions">
+                <a th:href="@{/checkout}" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
+                    <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i> Quay lại thanh toán
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="voucher-container">
+        <div class="voucher-header">
+            <h1>Kho Voucher</h1>
+            <p>Lưu ngay các mã giảm giá để sử dụng ở bước thanh toán nhé!</p>
+        </div>
+
+        <div class="voucher-grid">
+            <div th:each="v : ${vouchers}" 
+                 class="voucher-card" 
+                 th:classappend="${(!v.active) || (v.expiryDate != null && v.expiryDate.before(#dates.createNow())) || (v.usageLimit != null && v.usedCount >= v.usageLimit)} ? 'card-disabled' : ''">
+                
+                <div class="voucher-top">
+                    <div class="voucher-code" th:text="${v.code}">CODE</div>
+                    <i class="fa-solid fa-ticket voucher-icon"></i>
+                </div>
+                
+                <div class="voucher-body">
+                    <!-- Mô tả giảm giá -->
+                    <div class="voucher-desc">
+                        <span th:if="${v.discountType == 'AMOUNT'}">Giảm <span th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')}"></span>đ</span>
+                        <span th:if="${v.discountType == 'PERCENT'}">Giảm <span th:text="${v.discountValue}"></span>% 
+                            <span th:if="${v.maxDiscountValue != null && v.maxDiscountValue > 0}"> (Tối đa <span th:text="${#numbers.formatDecimal(v.maxDiscountValue, 0, 'COMMA', 0, 'POINT')}"></span>đ)</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Điều kiện đơn -->
+                    <div class="voucher-min">
+                        Áp dụng cho đơn từ <span th:text="${#numbers.formatDecimal(v.minOrderValue != null ? v.minOrderValue : 0, 0, 'COMMA', 0, 'POINT')}">0</span>đ
+                    </div>
+                    
+                    <!-- Thống kê sử dụng -->
+                    <div style="font-size: 13px; color: #888; margin-bottom: 15px;">
+                        <span th:if="${v.usageLimit != null}">Đã dùng: <span th:text="${v.usedCount}">0</span> / <span th:text="${v.usageLimit}">100</span></span>
+                        <span th:unless="${v.usageLimit != null}">Không giới hạn số lượt</span>
+                    </div>
+
+                    <div class="voucher-stats">
+                        <!-- Trạng thái -->
+                        <div>
+                            <span th:if="${!v.active}" class="badge badge-expired">Đã vô hiệu hoá</span>
+                            <span th:if="${v.active && v.expiryDate != null && v.expiryDate.before(#dates.createNow())}" class="badge badge-expired">Hết hạn</span>
+                            <span th:if="${v.active && (v.expiryDate == null || v.expiryDate.after(#dates.createNow())) && v.usageLimit != null && v.usedCount >= v.usageLimit}" class="badge badge-empty">Hết số lượng</span>
+                            <span th:if="${v.active && (v.expiryDate == null || v.expiryDate.after(#dates.createNow())) && (v.usageLimit == null || v.usedCount < v.usageLimit)}" class="badge badge-active">Sẵn sàng</span>
+                            
+                            <div style="margin-top: 5px; font-size: 11px;" th:if="${v.expiryDate != null}">
+                                HSD: <span th:text="${#dates.format(v.expiryDate, 'HH:mm dd/MM/yyyy')}"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Nút Copy -->
+                        <button class="btn-copy" th:data-code="${v.code}" onclick="copyCode(this.getAttribute('data-code'), this)">COPY</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p class="footer-text">© 2026 <span>Goodminton</span>. Thiết kế bởi Nhóm 03 - Đồ án Thương mại điện tử.</p>
+    </footer>
+
+    <script>
+        function copyCode(code, btn) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = "ĐÃ COPY!";
+                btn.style.background = "var(--primary)";
+                btn.style.color = "var(--bg-dark)";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "";
+                    btn.style.color = "";
+                }, 2000);
+            });
+        }
+    </script>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
+</body>
+</html>

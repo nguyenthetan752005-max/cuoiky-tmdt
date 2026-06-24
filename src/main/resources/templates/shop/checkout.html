@@ -31,21 +31,45 @@
         .payment-methods input { margin-right: 15px; width: auto; accent-color: var(--primary); }
         @media (max-width: 768px) { .checkout-container { grid-template-columns: 1fr; } }
     </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
 </head>
 <body>
 
-    <!-- Header Section (Simplified) -->
+    <!-- Global Announcement Banner -->
+    <div th:if="${globalConfig != null and globalConfig.globalAnnouncement != null and !globalConfig.globalAnnouncement.isEmpty()}" 
+         style="background: linear-gradient(90deg, var(--primary), var(--accent)); color: var(--bg-dark); text-align: center; padding: 8px; font-weight: 600; font-size: 0.9rem; overflow: hidden; white-space: nowrap;">
+        <marquee behavior="scroll" direction="left" scrollamount="5" th:text="${globalConfig.globalAnnouncement}"></marquee>
+    </div>
+
+    <!-- Header Section -->
     <header>
-        <div class="header-container">
-            <a th:href="@{/}" class="logo">
+        <div class="header-container" style="justify-content: center;">
+            <a th:href="@{/}" class="logo" style="display: flex; align-items: center; gap: 10px;">
                 <img th:src="@{/images/logo.jpg}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
-                Good<span>minton</span>
+                <span th:text="${globalConfig != null ? globalConfig.storeName : 'Goodminton'}">Goodminton</span>
             </a>
-            <div class="header-actions">
-                <a th:href="@{/tracking}" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
-                    <i class="fa-solid fa-truck" style="margin-right: 5px;"></i> Tra cứu
-                </a>
-            </div>
         </div>
     </header>
 
@@ -99,6 +123,34 @@
                 <!-- Javascript will populate this -->
             </div>
             
+            <div class="voucher-section" style="margin-top: 20px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="voucherInput" placeholder="Nhập mã giảm giá..." style="flex: 1; padding: 10px 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+                    <button type="button" id="btnApplyVoucher" style="padding: 10px 20px; background: var(--primary); color: var(--bg-dark); border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">ÁP DỤNG</button>
+                </div>
+                <div style="margin-top: 10px; font-size: 13px;">
+                    <a th:href="@{/vouchers}" target="_blank" style="color: #ffeb3b; text-decoration: none; font-weight: 500;">
+                        <i class="fa-solid fa-gift" style="margin-right: 5px;"></i> Bạn chưa có mã voucher? Tra cứu ở đây nhé!
+                    </a>
+                </div>
+                <div id="voucherMessage" style="margin-top: 10px; font-size: 14px;"></div>
+            </div>
+
+            <div class="order-calc" style="margin-top: 20px; font-size: 15px; color: var(--text-gray);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Tạm tính:</span>
+                    <span id="subTotalDisplay">0đ</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Phí vận chuyển:</span>
+                    <span id="shippingFeeDisplay">30.000đ</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #ffeb3b;">
+                    <span>Giảm giá Voucher:</span>
+                    <span id="discountDisplay">-0đ</span>
+                </div>
+            </div>
+            
             <div class="order-total">
                 <span>Tổng thanh toán:</span>
                 <span id="checkoutTotalPrice">0đ</span>
@@ -110,8 +162,20 @@
         <p class="footer-text">© 2026 <span>Goodminton</span>. Thiết kế bởi Nhóm 03 - Đồ án Thương mại điện tử.</p>
     </footer>
 
-    <script>
+    <!-- Hidden inputs cho Cấu hình hệ thống -->
+    <input type="hidden" id="baseShippingFeeVal" th:value="${globalConfig != null && globalConfig.baseShippingFee != null ? globalConfig.baseShippingFee : 30000}">
+    <input type="hidden" id="freeshipThresholdVal" th:value="${globalConfig != null && globalConfig.freeshipThreshold != null ? globalConfig.freeshipThreshold : 1000000000}">
+
+    <script th:inline="javascript">
         let cart = JSON.parse(localStorage.getItem('goodminton_cart')) || [];
+        let subTotal = 0;
+        
+        const baseShippingFee = parseFloat(document.getElementById('baseShippingFeeVal').value) || 30000;
+        const freeshipThreshold = parseFloat(document.getElementById('freeshipThresholdVal').value) || 1000000000;
+        
+        let shippingFee = baseShippingFee;
+        let discountAmount = 0;
+        let appliedVoucherCode = '';
 
         function renderCheckoutCart() {
             const listContainer = document.getElementById('checkoutItemsList');
@@ -125,10 +189,10 @@
             }
 
             listContainer.innerHTML = '';
-            let total = 0;
+            subTotal = 0;
 
             cart.forEach(item => {
-                total += item.price * item.quantity;
+                subTotal += item.price * item.quantity;
                 const formattedPrice = new Intl.NumberFormat('vi-VN').format(item.price * item.quantity) + 'đ';
                 const itemHTML = `
                     <div class="order-summary-item">
@@ -143,8 +207,88 @@
                 listContainer.innerHTML += itemHTML;
             });
 
-            totalContainer.textContent = new Intl.NumberFormat('vi-VN').format(total) + 'đ';
+            updateTotals();
         }
+
+        function updateTotals() {
+            // Kiểm tra Freeship
+            if (subTotal >= freeshipThreshold) {
+                shippingFee = 0;
+            } else {
+                shippingFee = baseShippingFee;
+            }
+
+            document.getElementById('subTotalDisplay').textContent = new Intl.NumberFormat('vi-VN').format(subTotal) + 'đ';
+            document.getElementById('shippingFeeDisplay').textContent = new Intl.NumberFormat('vi-VN').format(shippingFee) + 'đ';
+            document.getElementById('discountDisplay').textContent = '-' + new Intl.NumberFormat('vi-VN').format(discountAmount) + 'đ';
+            
+            let total = subTotal + shippingFee - discountAmount;
+            if (total < 0) total = 0;
+            document.getElementById('checkoutTotalPrice').textContent = new Intl.NumberFormat('vi-VN').format(total) + 'đ';
+        }
+
+        document.getElementById('btnApplyVoucher').addEventListener('click', async function() {
+            const code = document.getElementById('voucherInput').value.trim();
+            const msgEl = document.getElementById('voucherMessage');
+            
+            // Xử lý Hủy mã
+            if (this.textContent === 'HỦY MÃ') {
+                discountAmount = 0;
+                appliedVoucherCode = '';
+                document.getElementById('voucherInput').value = '';
+                document.getElementById('voucherInput').disabled = false;
+                this.textContent = 'ÁP DỤNG';
+                this.style.background = 'var(--primary)';
+                msgEl.textContent = 'Đã hủy mã giảm giá.';
+                msgEl.style.color = '#ff9800';
+                updateTotals();
+                return;
+            }
+            
+            if (!code) {
+                msgEl.style.color = '#ff5252';
+                msgEl.textContent = 'Vui lòng nhập mã giảm giá';
+                return;
+            }
+            
+            if (code === appliedVoucherCode) {
+                msgEl.style.color = '#ff9800';
+                msgEl.textContent = 'Mã này đang được áp dụng rồi!';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/vouchers/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, orderTotal: subTotal })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msgEl.style.color = '#4caf50';
+                    msgEl.textContent = data.message;
+                    discountAmount = data.discount;
+                    appliedVoucherCode = data.code;
+                    
+                    // Khóa ô input và đổi nút thành HỦY MÃ
+                    document.getElementById('voucherInput').disabled = true;
+                    this.textContent = 'HỦY MÃ';
+                    this.style.background = '#f44336';
+                    
+                    updateTotals();
+                } else {
+                    msgEl.style.color = '#ff5252';
+                    msgEl.textContent = data.message;
+                    discountAmount = 0;
+                    appliedVoucherCode = '';
+                    updateTotals();
+                }
+            } catch (err) {
+                msgEl.style.color = '#ff5252';
+                msgEl.textContent = 'Có lỗi xảy ra, vui lòng thử lại';
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCheckoutCart();
@@ -164,7 +308,8 @@
                 email: document.getElementById('email').value,
                 shippingAddress: document.getElementById('shippingAddress').value,
                 paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
-                cart: cart
+                cart: cart,
+                voucherCode: appliedVoucherCode
             };
 
             fetch('/api/orders/checkout', {
@@ -176,6 +321,14 @@
             .then(data => {
                 if (data.success) {
                     localStorage.removeItem('goodminton_cart');
+                    
+                    // Lưu lại mã đơn hàng vào localStorage để hỗ trợ tra cứu nếu quên
+                    let history = JSON.parse(localStorage.getItem('goodminton_orders')) || [];
+                    if (!history.includes(data.orderCode)) {
+                        history.push(data.orderCode);
+                        localStorage.setItem('goodminton_orders', JSON.stringify(history));
+                    }
+                    
                     window.location.href = '/tracking/result?orderCode=' + data.orderCode;
                 } else {
                     alert(data.message || 'Có lỗi xảy ra khi đặt hàng.');
@@ -191,5 +344,54 @@
             });
         });
     </script>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
 </body>
 </html>

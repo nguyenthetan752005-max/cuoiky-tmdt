@@ -282,6 +282,54 @@ public class AdminController {
         return "redirect:/admin/orders/" + id;
     }
 
+    @PostMapping("/orders/{id}/shipping-fee")
+    public String updateShippingFee(@PathVariable Long id,
+                                    @RequestParam BigDecimal shippingFee,
+                                    RedirectAttributes redirectAttributes) {
+        Optional<Order> orderOpt = orderService.findById(id);
+        if (orderOpt.isPresent()) {
+            Order order = orderOpt.get();
+            order.setShippingFee(shippingFee);
+            
+            // Tính lại tổng tiền: totalAmount = subtotal + shippingFee - discountAmount
+            BigDecimal subtotal = order.getOrderDetails().stream()
+                    .map(d -> d.getUnitPrice().multiply(new BigDecimal(d.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    
+            BigDecimal discount = order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO;
+            BigDecimal newTotal = subtotal.add(shippingFee).subtract(discount);
+            if (newTotal.compareTo(BigDecimal.ZERO) < 0) {
+                newTotal = BigDecimal.ZERO;
+            }
+            order.setTotalAmount(newTotal);
+            
+            orderService.save(order);
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật phí vận chuyển thành " + shippingFee + "đ. Tổng thanh toán đã được tự động tính lại!");
+        }
+        return "redirect:/admin/orders/" + id;
+    }
+
+    @Autowired
+    private com.goodminton.service.SystemConfigService systemConfigService;
+
+    @GetMapping("/settings")
+    public String settingsPage(Model model) {
+        model.addAttribute("config", systemConfigService.getConfig());
+        return "admin/settings";
+    }
+
+    @PostMapping("/settings/save")
+    public String saveSettings(@ModelAttribute com.goodminton.entity.SystemConfig systemConfig,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            systemConfigService.updateConfig(systemConfig);
+            redirectAttributes.addFlashAttribute("success", "Lưu cấu hình hệ thống thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi lưu cấu hình: " + e.getMessage());
+        }
+        return "redirect:/admin/settings";
+    }
+
     // ==================== KIỂM DUYỆT ĐÁNH GIÁ ====================
 
     @Autowired

@@ -7,15 +7,44 @@
     <!-- Google Font & FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
 </head>
 <body>
+
+    <!-- Global Announcement Banner -->
+    <div th:if="${globalConfig != null and globalConfig.globalAnnouncement != null and !globalConfig.globalAnnouncement.isEmpty()}" 
+         style="background: linear-gradient(90deg, var(--primary), var(--accent)); color: var(--bg-dark); text-align: center; padding: 8px; font-weight: 600; font-size: 0.9rem; overflow: hidden; white-space: nowrap;">
+        <marquee behavior="scroll" direction="left" scrollamount="5" th:text="${globalConfig.globalAnnouncement}"></marquee>
+    </div>
 
     <!-- Header Section -->
     <header>
         <div class="header-container">
-            <a th:href="@{/}" class="logo">
+            <a th:href="@{/}" class="logo" style="display: flex; align-items: center; gap: 10px;">
                 <img th:src="@{/images/logo.jpg}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
-                Good<span>minton</span>
+                <span th:text="${globalConfig != null ? globalConfig.storeName : 'Goodminton'}">Goodminton</span>
             </a>
             
             <!-- Search Bar -->
@@ -99,12 +128,12 @@
                         
                         <div class="product-bottom">
                             <span class="product-price" th:text="${#numbers.formatDecimal(prod.price, 0, 'COMMA', 0, 'POINT') + 'đ'}">4.250.000đ</span>
-                            <!-- Nút thêm giỏ hàng có thuộc tính data để JS xử lý -->
-                            <button class="add-cart-btn" 
+                            <button th:if="${prod.stockQuantity > 0}" class="add-cart-btn" 
                                     th:attr="data-id=${prod.id}, data-name=${prod.name}, data-price=${prod.price}, data-img=${prod.imageUrl}" 
                                     onclick="addToCart(this)">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
+                            <span th:if="${prod.stockQuantity <= 0}" style="color: #ff4444; font-size: 0.85rem; font-weight: bold; padding: 5px 10px; background: rgba(255,68,68,0.1); border-radius: 8px; border: 1px solid rgba(255,68,68,0.3);">Hết hàng</span>
                         </div>
                     </div>
                 </div>
@@ -143,8 +172,36 @@
     </div>
 
     <!-- Footer -->
-    <footer>
-        <p class="footer-text">© 2026 <span>Goodminton</span>. Thiết kế bởi Nhóm 03 - Đồ án Thương mại điện tử.</p>
+    <footer style="background: var(--bg-dark); border-top: 1px solid rgba(69, 243, 255, 0.1); padding: 40px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+            <div>
+                <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.2rem;" th:text="${globalConfig != null ? globalConfig.storeName : 'Goodminton'}">Goodminton</h3>
+                <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 10px;">
+                    <i class="fa-solid fa-location-dot" style="width: 20px; color: var(--accent);"></i> 
+                    <span th:text="${globalConfig != null ? globalConfig.storeAddress : 'Địa chỉ cửa hàng'}">Địa chỉ</span>
+                </p>
+                <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 10px;">
+                    <i class="fa-solid fa-phone" style="width: 20px; color: var(--accent);"></i> 
+                    <span th:text="${globalConfig != null ? globalConfig.hotline : 'Hotline'}">Hotline</span>
+                </p>
+                <p style="color: var(--text-gray); font-size: 0.9rem;">
+                    <i class="fa-solid fa-envelope" style="width: 20px; color: var(--accent);"></i> 
+                    <span th:text="${globalConfig != null ? globalConfig.contactEmail : 'Email'}">Email</span>
+                </p>
+            </div>
+            <div>
+                <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem;">Hỗ trợ khách hàng</h3>
+                <ul style="list-style: none; padding: 0; color: var(--text-gray); font-size: 0.9rem; line-height: 1.8;">
+                    <li>Chính sách bảo hành</li>
+                    <li>Chính sách đổi trả</li>
+                    <li>Hướng dẫn chọn vợt</li>
+                    <li>Tra cứu đơn hàng</li>
+                </ul>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+            <p class="footer-text">© 2026 <span th:text="${globalConfig != null ? globalConfig.storeName : 'Goodminton'}">Goodminton</span>. Thiết kế bởi Nhóm 03 - Đồ án Thương mại điện tử.</p>
+        </div>
     </footer>
 
     <!-- JavaScript xử lý Giỏ hàng Động (Mục 3.1.2) -->
@@ -246,9 +303,8 @@
                 alert('Giỏ hàng của bạn đang trống!');
                 return;
             }
+            document.querySelector('.checkout-btn').textContent = 'Đang chuyển hướng...';
             window.location.href = '/checkout';
-            alert('Đang chuyển hướng đến trang thanh toán...');
-            // Khi có màn hình Checkout, chúng ta sẽ chuyển hướng về /checkout
         }
 
         // Render giỏ hàng lần đầu khi tải trang
@@ -256,5 +312,54 @@
             renderCart();
         });
     </script>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
 </body>
 </html>

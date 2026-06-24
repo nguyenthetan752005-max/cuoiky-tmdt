@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Voucher - Goodminton Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark, #0b0c10); color: var(--text-white, #ffffff); min-height: 100vh; }
+        .admin-content { margin-left: 250px; padding: 80px 30px 30px 30px; min-height: 100vh; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: var(--primary, #45f3ff); }
+        .btn-add { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, rgba(32, 247, 123, 0.2), rgba(69, 243, 255, 0.2)); border: 1px solid #20f77b; color: #20f77b; border-radius: 10px; font-weight: 600; text-decoration: none; transition: 0.3s; }
+        .btn-add:hover { background: rgba(32, 247, 123, 0.3); box-shadow: 0 0 15px rgba(32, 247, 123, 0.4); transform: translateY(-2px); }
+        
+        .table-card { background: rgba(31, 40, 51, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(69, 243, 255, 0.1); border-radius: 16px; overflow: hidden; }
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table thead th { padding: 16px; text-align: left; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--primary, #45f3ff); background: rgba(69, 243, 255, 0.05); border-bottom: 1px solid rgba(69, 243, 255, 0.15); }
+        .admin-table tbody tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; }
+        .admin-table tbody tr:hover { background: rgba(69, 243, 255, 0.05); }
+        .admin-table tbody td { padding: 16px; font-size: 0.9rem; color: var(--text-gray, #c5c6c7); vertical-align: middle; }
+        
+        .code-badge { background: rgba(69, 243, 255, 0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-family: monospace; font-weight: bold; border: 1px dashed var(--primary); }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        .status-active { background: rgba(32, 247, 123, 0.15); color: #20f77b; border: 1px solid rgba(32, 247, 123, 0.3); }
+        .status-inactive { background: rgba(255, 68, 68, 0.15); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3); }
+        
+        .action-btn { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: 0.2s; margin-right: 5px; }
+        .btn-edit { background: rgba(69, 243, 255, 0.15); color: #45f3ff; border: 1px solid rgba(69, 243, 255, 0.3); }
+        .btn-edit:hover { background: rgba(69, 243, 255, 0.25); }
+        .btn-delete { background: rgba(255, 68, 68, 0.15); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3); }
+        .btn-delete:hover { background: rgba(255, 68, 68, 0.25); }
+
+        .flash-message { padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: 500; }
+        .flash-success { background: rgba(32, 247, 123, 0.15); border: 1px solid #20f77b; color: #20f77b; }
+        .flash-error { background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; color: #ff4444; }
+    </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
+</head>
+<body>
+<div th:replace="~{admin/layout :: sidebar(currentPage='vouchers')}"></div>
+<div th:replace="~{admin/layout :: topbar(pageTitle='Quản Lý Voucher')}"></div>
+
+<div class="admin-content">
+    <div th:if="${success}" class="flash-message flash-success" th:text="${success}"></div>
+    <div th:if="${error}" class="flash-message flash-error" th:text="${error}"></div>
+
+    <div class="page-header">
+        <h1 class="page-title">Danh sách Voucher</h1>
+        <a th:href="@{/admin/vouchers/create}" class="btn-add"><span>+</span> Thêm Voucher mới</a>
+    </div>
+
+    <div class="table-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã Code</th>
+                    <th>Loại</th>
+                    <th>Mức giảm</th>
+                    <th>Điều kiện</th>
+                    <th>Đã dùng</th>
+                    <th>Trạng thái</th>
+                    <th>Hạn sử dụng</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="v : ${vouchers}">
+                    <td><span class="code-badge" th:text="${v.code}">CODE</span></td>
+                    <td th:text="${v.discountType == 'AMOUNT' ? 'Trừ tiền' : 'Phần trăm'}">Type</td>
+                    <td>
+                        <span th:if="${v.discountType == 'AMOUNT'}" th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
+                        <span th:if="${v.discountType == 'PERCENT'}" th:text="${v.discountValue} + '%'"></span>
+                    </td>
+                    <td>
+                        <div style="font-size:0.8rem;">
+                            Đơn tối thiểu: <span th:text="${v.minOrderValue != null ? #numbers.formatDecimal(v.minOrderValue, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}"></span><br>
+                            <span th:if="${v.discountType == 'PERCENT' && v.maxDiscountValue != null}">
+                                Giảm tối đa: <span th:text="${#numbers.formatDecimal(v.maxDiscountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
+                            </span>
+                        </div>
+                    </td>
+                    <td><span th:text="${v.usedCount}">0</span> / <span th:text="${v.usageLimit != null ? v.usageLimit : '∞'}"></span></td>
+                    <td>
+                        <span th:if="${v.active}" class="status-badge status-active">Hoạt động</span>
+                        <span th:if="${!v.active}" class="status-badge status-inactive">Tạm khóa</span>
+                    </td>
+                    <td th:text="${v.expiryDate != null ? #dates.format(v.expiryDate, 'dd-MM-yyyy HH:mm') : 'Không thời hạn'}"></td>
+                    <td>
+                        <a th:href="@{/admin/vouchers/edit/{id}(id=${v.id})}" class="action-btn btn-edit">Sửa</a>
+                        <a th:href="@{/admin/vouchers/delete/{id}(id=${v.id})}" class="action-btn btn-delete" onclick="return confirm('Bạn có chắc muốn xóa mã giảm giá này?');">Xóa</a>
+                    </td>
+                </tr>
+                <tr th:if="${vouchers.isEmpty()}">
+                    <td colspan="8" style="text-align: center; padding: 40px;">Chưa có mã giảm giá nào.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
+</body>
+</html>

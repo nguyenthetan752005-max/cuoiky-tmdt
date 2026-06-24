@@ -342,6 +342,29 @@
             opacity: 0.6;
         }
     </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
 </head>
 <body>
     <!-- Sidebar -->
@@ -426,13 +449,14 @@
                                 <td>
                                     <div class="action-buttons">
                                         <button type="button" class="btn-action btn-action--edit"
-                                                th:onclick="|editCategory('${cat.id}', '${cat.name}', '${cat.description}')|">
+                                                th:attr="data-id=${cat.id}, data-name=${cat.name}, data-desc=${cat.description}"
+                                                onclick="editCategory(this)">
                                             <i class="fas fa-pen-to-square"></i>
                                             Sửa
                                         </button>
                                         <a th:href="@{/admin/categories/delete/{id}(id=${cat.id})}"
                                            class="btn-action btn-action--delete"
-                                           onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">
+                                           onclick="confirmLink(event, this, 'Bạn có chắc muốn xóa danh mục này?')">
                                             <i class="fas fa-trash-can"></i>
                                             Xóa
                                         </a>
@@ -457,7 +481,11 @@
         /**
          * Populate the form with category data for editing
          */
-        function editCategory(id, name, description) {
+        function editCategory(btn) {
+            const id = btn.getAttribute('data-id');
+            const name = btn.getAttribute('data-name');
+            const description = btn.getAttribute('data-desc');
+            
             document.getElementById('categoryId').value = id;
             document.getElementById('categoryName').value = name;
             document.getElementById('categoryDesc').value = description || '';
@@ -504,5 +532,54 @@
             });
         });
     </script>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
 </body>
 </html>

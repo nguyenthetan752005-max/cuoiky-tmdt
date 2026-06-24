@@ -8,6 +8,8 @@ import com.goodminton.repository.ProductRepository;
 import com.goodminton.repository.UserRepository;
 import com.goodminton.repository.CategoryRepository;
 import com.goodminton.repository.ProductRepository;
+import com.goodminton.entity.Voucher;
+import com.goodminton.repository.VoucherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +29,11 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private VoucherRepository voucherRepository;
+
+
+
     @Override
     public void run(String... args) throws Exception {
         // Tạo tài khoản Admin mặc định nếu chưa có
@@ -34,6 +41,27 @@ public class DataInitializer implements CommandLineRunner {
             User admin = new User(null, "admin", "admin", "ADMIN");
             userRepository.save(admin);
             System.out.println(">>> Đã tạo tài khoản Admin mặc định: admin/admin");
+        }
+
+        // Tạo dữ liệu Voucher mẫu
+        if (voucherRepository.count() == 0) {
+            // Ngày mai
+            java.util.Date tomorrow = new java.util.Date(System.currentTimeMillis() + 86400000L);
+            // Hôm qua
+            java.util.Date yesterday = new java.util.Date(System.currentTimeMillis() - 86400000L);
+
+            // Voucher hợp lệ, số lượng 100
+            voucherRepository.save(new Voucher(null, "FREESHIP", "AMOUNT", new BigDecimal("30000"), new BigDecimal("100000"), null, 100, 0, true, tomorrow));
+            voucherRepository.save(new Voucher(null, "GIAM50K", "AMOUNT", new BigDecimal("50000"), new BigDecimal("500000"), null, 50, 0, true, tomorrow));
+            voucherRepository.save(new Voucher(null, "GIAM10PT", "PERCENT", new BigDecimal("10"), new BigDecimal("0"), new BigDecimal("100000"), 200, 0, true, tomorrow));
+            
+            // Voucher hết lượt (limit = 10, used = 10)
+            voucherRepository.save(new Voucher(null, "HETLUOT", "AMOUNT", new BigDecimal("10000"), new BigDecimal("0"), null, 10, 10, true, tomorrow));
+            
+            // Voucher hết hạn (hết hạn từ hôm qua)
+            voucherRepository.save(new Voucher(null, "HETHAN", "AMOUNT", new BigDecimal("20000"), new BigDecimal("0"), null, 100, 0, true, yesterday));
+
+            System.out.println(">>> Đã tạo dữ liệu Voucher mẫu (FREESHIP, GIAM50K, GIAM10PT, HETLUOT, HETHAN)");
         }
 
         // Chỉ seed dữ liệu mẫu khi database chưa có sản phẩm/danh mục.
@@ -49,7 +77,11 @@ public class DataInitializer implements CommandLineRunner {
         Category phukien = new Category(null, "Phụ kiện", "Quấn cán, phấn hút mồ hôi, phụ kiện khác", null);
         Category quanao = new Category(null, "Quần áo thể thao", "Trang phục thi đấu cầu lông chính hãng", null);
         
-        categoryRepository.saveAll(Arrays.asList(vot, giay, cau, phukien, quanao));
+        vot = categoryRepository.save(vot);
+        giay = categoryRepository.save(giay);
+        cau = categoryRepository.save(cau);
+        phukien = categoryRepository.save(phukien);
+        quanao = categoryRepository.save(quanao);
 
         // 2. Tạo sản phẩm mẫu (Ánh xạ 100% chính xác với các file bạn vừa thả vào folder)
         

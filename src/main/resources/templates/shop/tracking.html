@@ -66,6 +66,28 @@
         .btn-submit-return:disabled { opacity: 0.5; cursor: not-allowed; }
         .return-success { margin-top: 15px; padding: 14px; background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.3); border-radius: 10px; color: #81c784; font-size: 0.9rem; display: none; }
     </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -87,14 +109,56 @@
     <main class="tracking-container" style="display: block;">
         <div class="tracking-box">
             <h1>Tra Cứu Đơn Hàng</h1>
-            <p style="margin-bottom: 25px; color: var(--text-gray);">Nhập mã đơn hàng của bạn để kiểm tra tình trạng giao hàng.</p>
             
             <div th:if="${error}" class="alert-error" th:text="${error}">Lỗi</div>
 
-            <form th:action="@{/tracking/result}" method="get" class="tracking-form">
-                <input type="text" name="orderCode" class="tracking-input" placeholder="Ví dụ: GM-A1B2C3" required th:value="${param.orderCode}">
+            <form th:action="@{/tracking/result}" method="get" class="tracking-form" style="margin-bottom: 20px;">
+                <input type="text" name="orderCode" class="tracking-input" placeholder="Nhập Mã đơn hàng (VD: GM-A1B2C3)" required th:value="${param.orderCode}">
                 <button type="submit" class="tracking-btn">Tra cứu</button>
             </form>
+
+            <div style="margin: 20px 0; color: var(--text-gray); font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; justify-content: center;">
+                <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.1); margin-right: 15px;"></span>
+                HOẶC
+                <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.1); margin-left: 15px;"></span>
+            </div>
+
+            <form th:action="@{/tracking/phone}" method="get" class="tracking-form" style="margin-bottom: 20px;">
+                <input type="text" name="phoneNumber" class="tracking-input" placeholder="Nhập Số điện thoại mua hàng" required th:value="${searchPhone}">
+                <button type="submit" class="tracking-btn" style="background: linear-gradient(45deg, #2196f3, #00bcd4); box-shadow: 0 0 15px rgba(33,150,243,0.3);">Lịch sử</button>
+            </form>
+
+            <!-- Lịch sử tra cứu gần đây (Từ LocalStorage) -->
+            <div id="orderHistorySection" style="margin-top: 25px; text-align: left; display: none;">
+                <h4 style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fa-solid fa-clock-rotate-left"></i> Đơn hàng đã lưu trên máy bạn:</span>
+                    <button id="clearAllHistoryBtn" onclick="clearAllHistory()" style="background: none; border: none; color: #ff5252; cursor: pointer; font-size: 0.8rem; display: none; transition: 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa-solid fa-trash"></i> Xóa tất cả</button>
+                </h4>
+                <div id="orderHistoryList" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <!-- JS sẽ render các chip mã đơn hàng vào đây -->
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button id="viewAllHistoryBtn" onclick="toggleViewAllHistory()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: bold; display: none; transition: 0.2s;" onmouseover="this.style.textShadow='0 0 8px var(--primary)'" onmouseout="this.style.textShadow='none'">Xem tất cả <i class="fa-solid fa-angle-down"></i></button>
+                </div>
+            </div>
+
+            <!-- Kết quả tra cứu bằng SĐT (Danh sách) -->
+            <div th:if="${ordersList != null}" style="margin-top: 30px; text-align: left;">
+                <h3 style="color: #00bcd4; margin-bottom: 15px; font-size: 1.2rem;"><i class="fa-solid fa-list-check" style="margin-right: 8px;"></i>Lịch sử mua hàng của SĐT: <span th:text="${searchPhone}"></span></h3>
+                <div class="item-list">
+                    <a th:each="o : ${ordersList}" th:href="@{/tracking/result(orderCode=${o.orderCode})}" class="item-row" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0,188,212,0.1)'" onmouseout="this.style.background='transparent'">
+                        <div class="item-info">
+                            <h4 th:text="${o.orderCode}" style="color: var(--text-white); font-size: 1.1rem; margin-bottom: 8px; font-weight: 700;">Mã đơn</h4>
+                            <p style="margin-bottom: 8px; color: var(--text-gray); font-size: 0.85rem;"><i class="fa-solid fa-calendar-days" style="margin-right: 5px;"></i><span th:text="${#dates.format(o.createdAt, 'dd-MM-yyyy HH:mm')}"></span></p>
+                            <span class="order-status" th:classappend="'status-' + ${o.status}" th:text="${o.status}" style="font-size: 0.7rem; padding: 4px 10px;"></span>
+                        </div>
+                        <div class="item-price" style="text-align: right; color: var(--accent); font-weight: bold;">
+                            <span th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'" style="display: block; margin-bottom: 5px; font-size: 1.1rem;">Giá</span>
+                            <i class="fa-solid fa-chevron-right" style="color: var(--text-gray); font-size: 0.9rem;"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
 
             <!-- Kết quả tra cứu -->
             <div class="order-result" th:if="${order != null}">
@@ -202,6 +266,118 @@
     </footer>
 
     <script>
+        let isShowingAllHistory = false;
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('goodminton_orders')) || [];
+            const sectionEl = document.getElementById('orderHistorySection');
+            const listEl = document.getElementById('orderHistoryList');
+            const clearAllBtn = document.getElementById('clearAllHistoryBtn');
+            const viewAllBtn = document.getElementById('viewAllHistoryBtn');
+
+            if (history.length === 0) {
+                sectionEl.style.display = 'none';
+                return;
+            }
+
+            sectionEl.style.display = 'block';
+            clearAllBtn.style.display = 'inline-block';
+            listEl.innerHTML = '';
+
+            const reversedHistory = [...history].reverse();
+            
+            let displayList = reversedHistory;
+            if (reversedHistory.length > 5) {
+                viewAllBtn.style.display = 'inline-block';
+                if (!isShowingAllHistory) {
+                    displayList = reversedHistory.slice(0, 5);
+                    viewAllBtn.innerHTML = 'Xem tất cả <i class="fa-solid fa-angle-down"></i>';
+                } else {
+                    viewAllBtn.innerHTML = 'Thu gọn <i class="fa-solid fa-angle-up"></i>';
+                }
+            } else {
+                viewAllBtn.style.display = 'none';
+            }
+
+            displayList.forEach(code => {
+                const chip = document.createElement('div');
+                chip.className = 'history-chip';
+                chip.style.cssText = 'display: flex; align-items: center; padding: 6px 14px; background: rgba(69, 243, 255, 0.1); border: 1px solid var(--primary); border-radius: 20px; color: var(--primary); font-size: 0.85rem; font-weight: 600; transition: all 0.3s; cursor: pointer;';
+                
+                const link = document.createElement('a');
+                link.href = `/tracking/result?orderCode=${code}`;
+                link.style.cssText = 'color: inherit; text-decoration: none; margin-right: 12px; display: flex; align-items: center;';
+                link.innerHTML = `<i class="fa-solid fa-clock" style="margin-right: 6px;"></i> ${code}`;
+                
+                const delBtn = document.createElement('i');
+                delBtn.className = 'fa-solid fa-xmark';
+                delBtn.style.cssText = 'color: #ff5252; padding: 4px; border-radius: 50%; transition: 0.2s; font-size: 0.9rem;';
+                delBtn.onmouseover = () => { delBtn.style.background = 'rgba(255, 82, 82, 0.2)'; };
+                delBtn.onmouseout = () => { delBtn.style.background = 'transparent'; };
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    Swal.fire({
+                        title: 'Xóa lịch sử',
+                        html: `Bạn có chắc muốn xóa lịch sử tra cứu của đơn hàng <strong style="color:var(--primary)">${code}</strong>?<br><br><span style="color:#ff5252; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Nếu bạn quên mã này, bạn sẽ không thể tra cứu lại được!</span>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff5252',
+                        confirmButtonText: 'Đồng ý',
+                        cancelButtonText: 'Hủy'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            deleteHistoryItem(code);
+                        }
+                    });
+                };
+
+                chip.appendChild(link);
+                chip.appendChild(delBtn);
+                chip.onmouseover = () => { chip.style.background = 'rgba(69, 243, 255, 0.25)'; };
+                chip.onmouseout = () => { chip.style.background = 'rgba(69, 243, 255, 0.1)'; };
+                
+                listEl.appendChild(chip);
+            });
+        }
+
+        function toggleViewAllHistory() {
+            isShowingAllHistory = !isShowingAllHistory;
+            renderHistory();
+        }
+
+        function deleteHistoryItem(code) {
+            let history = JSON.parse(localStorage.getItem('goodminton_orders')) || [];
+            history = history.filter(item => item !== code);
+            localStorage.setItem('goodminton_orders', JSON.stringify(history));
+            
+            if (history.length <= 5) {
+                isShowingAllHistory = false;
+            }
+            renderHistory();
+        }
+
+        function clearAllHistory() {
+            Swal.fire({
+                title: 'Xóa tất cả lịch sử',
+                html: `Bạn có chắc chắn muốn xóa <strong>TẤT CẢ</strong> lịch sử đơn hàng đã lưu trên máy không?<br><br><span style="color:#ff5252; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> CẢNH BÁO: Xóa hết sẽ làm bạn mất hoàn toàn danh sách tra cứu nhanh!</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('goodminton_orders');
+                    isShowingAllHistory = false;
+                    renderHistory();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHistory();
+        });
+
         async function submitReturn(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSubmitReturn');
@@ -238,6 +414,54 @@
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu đổi/trả';
             }
         }
+    </script>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
     </script>
 
 </body>

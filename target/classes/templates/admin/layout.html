@@ -3,6 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Layout Fragments</title>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
 </head>
 <body>
 
@@ -157,8 +180,29 @@
             <i class="fas fa-clipboard-list"></i>
             <span>Đơn hàng</span>
         </a>
-
+        <a th:href="@{/admin/reviews}" class="sidebar-nav__link"
+           th:classappend="${currentPage == 'reviews'} ? 'sidebar-nav__link--active'">
+            <i class="fas fa-star"></i>
+            <span>Đánh giá</span>
+        </a>
+        <a th:href="@{/admin/returns}" class="sidebar-nav__link"
+           th:classappend="${currentPage == 'returns'} ? 'sidebar-nav__link--active'">
+            <i class="fas fa-rotate-left"></i>
+            <span>Đổi/Trả hàng</span>
+        </a>
+        <a th:href="@{/admin/vouchers}" class="sidebar-nav__link"
+           th:classappend="${currentPage == 'vouchers'} ? 'sidebar-nav__link--active'">
+            <i class="fas fa-ticket"></i>
+            <span>Quản lý Voucher</span>
+        </a>
+        
         <div class="sidebar-separator"></div>
+        
+        <a th:href="@{/admin/settings}" class="sidebar-nav__link"
+           th:classappend="${currentPage == 'settings'} ? 'sidebar-nav__link--active'">
+            <i class="fas fa-gear"></i>
+            <span>Cài đặt hệ thống</span>
+        </a>
 
         <a th:href="@{/}" class="sidebar-nav__link">
             <i class="fas fa-store"></i>
@@ -241,12 +285,61 @@
 
     <div class="topbar-user">
         <span>Xin chào,</span>
-        <span class="topbar-user__name" th:text="${session.adminUser != null ? session.adminUser : 'Admin'}">Admin</span>
+        <span class="topbar-user__name" th:text="${session.adminUser != null ? session.adminUser.username : 'Admin'}">Admin</span>
         <div class="topbar-user__avatar">
             <i class="fas fa-user-shield"></i>
         </div>
     </div>
 </header>
+
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
 
 </body>
 </html>

@@ -28,4 +28,6 @@ public class CheckoutRequest {
     
     @NotEmpty(message = "Giỏ hàng không được để trống")
     private List<CartItemDto> cart;
+    
+    private String voucherCode;
 }

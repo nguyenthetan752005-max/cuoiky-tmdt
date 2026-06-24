@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${voucher.id != null ? 'Sửa Voucher' : 'Thêm Voucher'} + ' - Admin'">Voucher - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark, #0b0c10); color: var(--text-white, #ffffff); min-height: 100vh; }
+        .admin-content { margin-left: 250px; padding: 80px 30px 30px 30px; min-height: 100vh; }
+        
+        .form-card { background: rgba(31, 40, 51, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(69, 243, 255, 0.1); border-radius: 16px; padding: 30px; max-width: 800px; margin: 0 auto; }
+        .form-title { font-size: 1.5rem; color: var(--primary); margin-bottom: 25px; text-transform: uppercase; border-bottom: 1px solid rgba(69,243,255,0.2); padding-bottom: 15px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 0.9rem; font-weight: 500; }
+        .form-control { width: 100%; padding: 12px 15px; background: rgba(11, 12, 16, 0.6); border: 1px solid rgba(69, 243, 255, 0.15); border-radius: 8px; color: #fff; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.3s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(69, 243, 255, 0.2); }
+        
+        .form-row { display: flex; gap: 20px; }
+        .form-row .form-group { flex: 1; }
+        
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .checkbox-group input { width: 18px; height: 18px; cursor: pointer; }
+        
+        .btn-submit { padding: 12px 30px; background: linear-gradient(135deg, rgba(69,243,255,0.2), rgba(32,247,123,0.2)); border: 1px solid var(--primary); color: var(--primary); border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn-submit:hover { background: linear-gradient(135deg, rgba(69,243,255,0.3), rgba(32,247,123,0.3)); box-shadow: 0 0 15px rgba(69,243,255,0.4); }
+        .btn-cancel { padding: 12px 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-gray); border-radius: 8px; font-weight: 600; text-decoration: none; transition: 0.3s; margin-right: 15px; display: inline-block; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        
+        .form-actions { margin-top: 30px; display: flex; justify-content: flex-end; align-items: center; }
+    </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* SweetAlert Dark Theme Tweaks to match Goodminton */
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            background: #1a222c !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(69, 243, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+            background: #45f3ff !important;
+            color: #1a1a2e !important;
+            font-weight: 600;
+        }
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+            background: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+        }
+    </style>
+
+</head>
+<body>
+<div th:replace="~{admin/layout :: sidebar(currentPage='vouchers')}"></div>
+<div th:replace="~{admin/layout :: topbar(pageTitle='Quản Lý Voucher')}"></div>
+
+<div class="admin-content">
+    <div class="form-card">
+        <h2 class="form-title" th:text="${voucher.id != null ? 'Cập Nhật Voucher' : 'Thêm Mới Voucher'}">Form Voucher</h2>
+        
+        <form th:action="@{/admin/vouchers/save}" method="post" th:object="${voucher}">
+            <input type="hidden" th:field="*{id}">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mã Voucher (Code) <span style="color:#ff4444">*</span></label>
+                    <input type="text" th:field="*{code}" class="form-control" required placeholder="VD: SUMMER2026" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Loại Giảm Giá <span style="color:#ff4444">*</span></label>
+                    <select th:field="*{discountType}" class="form-control">
+                        <option value="AMOUNT">Giảm tiền mặt (đ)</option>
+                        <option value="PERCENT">Giảm phần trăm (%)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Mức giảm (Số tiền / %) <span style="color:#ff4444">*</span></label>
+                    <input type="number" th:field="*{discountValue}" class="form-control" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>Đơn tối thiểu để áp dụng</label>
+                    <input type="number" th:field="*{minOrderValue}" class="form-control" placeholder="Để trống nếu không yêu cầu">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Giảm tối đa (Chỉ áp dụng nếu Loại = Giảm phần trăm)</label>
+                <input type="number" th:field="*{maxDiscountValue}" class="form-control" placeholder="VD: 50000">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Giới hạn số lượt dùng (Lượt)</label>
+                    <input type="number" th:field="*{usageLimit}" class="form-control" placeholder="Để trống nếu không giới hạn">
+                </div>
+                <div class="form-group">
+                    <label>Hạn sử dụng</label>
+                    <input type="datetime-local" name="expiryDateStr" class="form-control" 
+                           th:value="${voucher.expiryDate != null ? #dates.format(voucher.expiryDate, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" th:field="*{active}" id="activeCheck">
+                <label for="activeCheck" style="margin-bottom:0; color:#fff;">Đang hoạt động (Khách hàng có thể sử dụng)</label>
+            </div>
+
+            <div class="form-actions">
+                <a th:href="@{/admin/vouchers}" class="btn-cancel">Hủy bỏ</a>
+                <button type="submit" class="btn-submit" th:text="${voucher.id != null ? 'Lưu Cập Nhật' : 'Tạo Voucher Mới'}">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Global SweetAlert wrappers -->
+    <script>
+        function confirmLink(e, element, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = element.href;
+                }
+            });
+        }
+
+        function confirmForm(e, form, text) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Xác nhận',
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff5252',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+        
+        // Override standard alert to use SweetAlert
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            Swal.fire({
+                title: 'Thông báo',
+                text: msg,
+                icon: msg.toLowerCase().includes('lỗi') || msg.toLowerCase().includes('trống') ? 'error' : 'info',
+                confirmButtonText: 'OK'
+            });
+        };
+    </script>
+
+</body>
+</html>

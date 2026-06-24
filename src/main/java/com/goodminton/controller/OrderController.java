@@ -64,4 +64,16 @@ public class OrderController {
         }
         return "shop/tracking";
     }
+
+    @GetMapping("/tracking/phone")
+    public String trackingByPhone(@RequestParam("phoneNumber") String phoneNumber, Model model) {
+        List<Order> orders = orderService.findByPhoneNumber(phoneNumber.trim());
+        if (orders != null && !orders.isEmpty()) {
+            model.addAttribute("ordersList", orders);
+            model.addAttribute("searchPhone", phoneNumber);
+        } else {
+            model.addAttribute("error", "Không tìm thấy đơn hàng nào với số điện thoại " + phoneNumber);
+        }
+        return "shop/tracking";
+    }
 }

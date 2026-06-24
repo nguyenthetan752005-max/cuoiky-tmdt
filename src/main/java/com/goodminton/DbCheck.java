@@ -1,3 +1,5 @@
+package com.goodminton;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -10,7 +12,7 @@ public class DbCheck {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, name FROM categories");
             System.out.println("CATEGORIES IN DB:");
-            while(rs.next()) {
+            while (rs.next()) {
                 System.out.println(rs.getInt("id") + " - " + rs.getString("name"));
             }
             conn.close();

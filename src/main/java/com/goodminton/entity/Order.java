@@ -37,6 +37,14 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(columnDefinition = "DECIMAL(10,2) DEFAULT 0")
+    private BigDecimal shippingFee = BigDecimal.ZERO;
+
+    @Column(columnDefinition = "DECIMAL(10,2) DEFAULT 0")
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    private String voucherCode;
+
     // Trạng thái và Thanh toán
     private String paymentMethod; // COD, MOMO, VNPAY
     private String status; // PENDING, SHIPPING, DELIVERED, CANCELLED
