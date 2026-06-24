@@ -36,6 +36,10 @@ public class Review {
     private int upvotes = 0;
     private int downvotes = 0;
 
+    // Admin phản hồi đánh giá
+    @Column(columnDefinition = "TEXT")
+    private String adminReply;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 }

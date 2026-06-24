@@ -166,8 +166,14 @@ public class AdminController {
     // ==================== QUẢN LÝ SẢN PHẨM ====================
 
     @GetMapping("/products")
-    public String listProducts(Model model) {
-        model.addAttribute("products", productService.findAll());
+    public String listProducts(@RequestParam(required = false) String keyword, Model model) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            model.addAttribute("products", productService.findByNameContainingIgnoreCase(keyword.trim()));
+            model.addAttribute("keyword", keyword);
+        } else {
+            model.addAttribute("products", productService.findAll());
+            model.addAttribute("keyword", "");
+        }
         return "admin/products";
     }
 
@@ -282,8 +288,14 @@ public class AdminController {
     private ReviewService reviewService;
 
     @GetMapping("/reviews")
-    public String listReviews(Model model) {
-        model.addAttribute("reviews", reviewService.findAll());
+    public String listReviews(@RequestParam(required = false) Integer rating, Model model) {
+        if (rating != null && rating > 0) {
+            model.addAttribute("reviews", reviewService.findByRating(rating));
+            model.addAttribute("selectedRating", rating);
+        } else {
+            model.addAttribute("reviews", reviewService.findAll());
+            model.addAttribute("selectedRating", "");
+        }
         return "admin/reviews";
     }
 
@@ -294,6 +306,17 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("success", "Đã xóa đánh giá thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không thể xóa đánh giá: " + e.getMessage());
+        }
+        return "redirect:/admin/reviews";
+    }
+
+    @PostMapping("/reviews/reply/{id}")
+    public String replyReview(@PathVariable Long id, @RequestParam String adminReply, RedirectAttributes redirectAttributes) {
+        try {
+            reviewService.addAdminReply(id, adminReply);
+            redirectAttributes.addFlashAttribute("success", "Đã phản hồi đánh giá thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/reviews";
     }

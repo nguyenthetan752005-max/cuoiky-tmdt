@@ -26,6 +26,10 @@ public class ReviewService {
         return reviewRepository.findAll();
     }
 
+    public List<Review> findByRating(int rating) {
+        return reviewRepository.findByRating(rating);
+    }
+
     public List<Review> findByProductId(Long productId) {
         return reviewRepository.findByProductIdOrderByCreatedAtDesc(productId);
     }
@@ -93,6 +97,17 @@ public class ReviewService {
         Long productId = review.getProduct().getId();
         reviewRepository.delete(review);
         recalculateProductRating(productId);
+    }
+
+    /**
+     * Admin phản hồi đánh giá.
+     */
+    @Transactional
+    public void addAdminReply(Long reviewId, String reply) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đánh giá"));
+        review.setAdminReply(reply);
+        reviewRepository.save(review);
     }
 
     /**

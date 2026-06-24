@@ -230,6 +230,19 @@
         <a th:href="@{/admin/products/add}" class="btn-add">+ Thêm sản phẩm</a>
     </div>
 
+    <!-- Search Form -->
+    <form th:action="@{/admin/products}" method="get" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+        <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm kiếm sản phẩm theo tên..." 
+               style="padding: 10px 14px; border-radius: 8px; background: rgba(31,40,51,0.6); color: #fff; border: 1px solid rgba(69,243,255,0.2); width: 350px; font-family: inherit;">
+        <button type="submit" style="padding: 10px 18px; border-radius: 8px; background: rgba(69,243,255,0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-weight: 600; transition: all 0.3s;">
+            <i class="fa-solid fa-magnifying-glass" style="margin-right: 5px;"></i> Tìm
+        </button>
+        <a th:if="${keyword != null and !keyword.isEmpty()}" th:href="@{/admin/products}" 
+           style="padding: 10px 18px; border-radius: 8px; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: all 0.3s;">
+           Xóa lọc
+        </a>
+    </form>
+
     <!-- Product Table -->
     <div class="table-card">
         <table class="admin-table" th:if="${products != null and !products.isEmpty()}">

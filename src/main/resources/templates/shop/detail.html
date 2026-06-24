@@ -480,6 +480,12 @@
                             </div>
                             <div class="review-card-stars">${stars}</div>
                             ${r.content ? '<p class="review-card-content">' + r.content + '</p>' : ''}
+                            ${r.adminReply ? `
+                            <div class="admin-reply-box" style="margin-top: 10px; padding: 12px; background: rgba(69, 243, 255, 0.05); border-left: 3px solid var(--primary); border-radius: 4px;">
+                                <div style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-bottom: 4px;"><i class="fa-solid fa-headset" style="margin-right: 5px;"></i>Phản hồi từ Goodminton</div>
+                                <div style="font-size: 0.85rem; color: #e0e0e0; line-height: 1.4;">${r.adminReply}</div>
+                            </div>
+                            ` : ''}
                             <div class="review-card-actions">
                                 <button class="vote-btn upvote" onclick="voteReview(${r.id}, 'upvote', this)">
                                     <i class="fa-solid fa-thumbs-up"></i> Hữu ích <span>(${r.upvotes})</span>

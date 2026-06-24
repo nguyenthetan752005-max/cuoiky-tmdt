@@ -127,6 +127,25 @@
     <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
     <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
 
+    <!-- Filter Form -->
+    <form th:action="@{/admin/reviews}" method="get" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+        <select name="rating" style="padding: 10px 14px; border-radius: 8px; background: rgba(31,40,51,0.6); color: #fff; border: 1px solid rgba(69,243,255,0.2); width: 200px; font-family: inherit;">
+            <option value="">Tất cả số sao</option>
+            <option value="5" th:selected="${selectedRating == 5}">⭐⭐⭐⭐⭐ (5 Sao)</option>
+            <option value="4" th:selected="${selectedRating == 4}">⭐⭐⭐⭐ (4 Sao)</option>
+            <option value="3" th:selected="${selectedRating == 3}">⭐⭐⭐ (3 Sao)</option>
+            <option value="2" th:selected="${selectedRating == 2}">⭐⭐ (2 Sao)</option>
+            <option value="1" th:selected="${selectedRating == 1}">⭐ (1 Sao)</option>
+        </select>
+        <button type="submit" style="padding: 10px 18px; border-radius: 8px; background: rgba(69,243,255,0.1); border: 1px solid var(--primary); color: var(--primary); cursor: pointer; font-weight: 600; transition: all 0.3s;">
+            <i class="fa-solid fa-filter" style="margin-right: 5px;"></i> Lọc
+        </button>
+        <a th:if="${selectedRating != null and selectedRating != ''}" th:href="@{/admin/reviews}" 
+           style="padding: 10px 18px; border-radius: 8px; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; text-decoration: none; font-weight: 500; font-size: 0.85rem; transition: all 0.3s;">
+           Xóa lọc
+        </a>
+    </form>
+
     <!-- Reviews Table -->
     <div class="table-card">
         <table class="admin-table" th:if="${reviews != null and !reviews.isEmpty()}">
@@ -137,6 +156,7 @@
                     <th>Người đánh giá</th>
                     <th>Sao</th>
                     <th>Nội dung</th>
+                    <th>Phản hồi của Shop</th>
                     <th>👍 / 👎</th>
                     <th>Ngày</th>
                     <th>Thao tác</th>
@@ -154,6 +174,12 @@
                         </span>
                     </td>
                     <td class="content-cell" th:text="${r.content}">Nội dung đánh giá</td>
+                    <td>
+                        <form th:action="@{/admin/reviews/reply/{id}(id=${r.id})}" method="post" style="display:flex; flex-direction:column; gap: 6px;">
+                            <textarea name="adminReply" th:text="${r.adminReply}" placeholder="Nhập phản hồi..." rows="2" style="padding:6px; border-radius:6px; border:1px solid rgba(69,243,255,0.2); background:rgba(0,0,0,0.3); color:#fff; width:180px; font-family:inherit; font-size:0.8rem; resize:vertical;"></textarea>
+                            <button type="submit" style="padding:4px 10px; border-radius:6px; cursor:pointer; background:rgba(69,243,255,0.1); color:var(--primary); border:1px solid var(--primary); font-size:0.75rem; align-self:flex-start; transition:all 0.3s;">Phản hồi</button>
+                        </form>
+                    </td>
                     <td>
                         <span class="votes-up" th:text="${r.upvotes}">0</span> /
                         <span class="votes-down" th:text="${r.downvotes}">0</span>
