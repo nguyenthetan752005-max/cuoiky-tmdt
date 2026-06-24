@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Admin GOOD MINTON</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark, #0b0c10);
+            color: var(--text-white, #ffffff);
+            min-height: 100vh;
+        }
+
+        /* ── Main content area ── */
+        .admin-content {
+            margin-left: 260px;
+            padding-top: 70px;
+            min-height: 100vh;
+        }
+
+        .admin-content__inner {
+            padding: 32px;
+        }
+
+        /* ── Stats cards row ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(31, 40, 51, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(69, 243, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(69, 243, 255, 0.25);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .stat-card__icon--green {
+            background: rgba(32, 247, 123, 0.12);
+            color: var(--accent, #20f77b);
+        }
+
+        .stat-card__icon--cyan {
+            background: rgba(69, 243, 255, 0.12);
+            color: var(--primary, #45f3ff);
+        }
+
+        .stat-card__icon--orange {
+            background: rgba(255, 167, 38, 0.12);
+            color: #ffa726;
+        }
+
+        .stat-card__icon--purple {
+            background: rgba(171, 71, 188, 0.12);
+            color: #ab47bc;
+        }
+
+        .stat-card__info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-card__label {
+            font-size: 0.82rem;
+            color: var(--text-gray, #c5c6c7);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card__value {
+            font-size: 1.65rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .stat-card__value--green { color: var(--accent, #20f77b); }
+        .stat-card__value--cyan { color: var(--primary, #45f3ff); }
+        .stat-card__value--orange { color: #ffa726; }
+        .stat-card__value--purple { color: #ab47bc; }
+
+        /* ── Order status breakdown ── */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .status-card {
+            background: rgba(31, 40, 51, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.25s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            background: rgba(31, 40, 51, 0.7);
+        }
+
+        .status-card__value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .status-card__label {
+            font-size: 0.82rem;
+            color: var(--text-gray, #c5c6c7);
+            font-weight: 500;
+        }
+
+        .status-card--pending .status-card__value { color: #ffd740; }
+        .status-card--pending { border-color: rgba(255, 215, 64, 0.15); }
+
+        .status-card--shipping .status-card__value { color: #42a5f5; }
+        .status-card--shipping { border-color: rgba(66, 165, 245, 0.15); }
+
+        .status-card--delivered .status-card__value { color: var(--accent, #20f77b); }
+        .status-card--delivered { border-color: rgba(32, 247, 123, 0.15); }
+
+        .status-card--cancelled .status-card__value { color: #ff5252; }
+        .status-card--cancelled { border-color: rgba(255, 82, 82, 0.15); }
+
+        /* ── Section header ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .section-header__bar {
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(180deg, var(--primary, #45f3ff), var(--accent, #20f77b));
+            border-radius: 2px;
+        }
+
+        .section-header__title {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        /* ── Recent orders table ── */
+        .table-card {
+            background: rgba(31, 40, 51, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(69, 243, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .table-card__header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(69, 243, 255, 0.08);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table thead th {
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-gray, #c5c6c7);
+            background: rgba(11, 12, 16, 0.3);
+            border-bottom: 1px solid rgba(69, 243, 255, 0.06);
+        }
+
+        .admin-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.2s ease;
+        }
+
+        .admin-table tbody tr:hover {
+            background: rgba(69, 243, 255, 0.04);
+        }
+
+        .admin-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .admin-table tbody td {
+            padding: 14px 20px;
+            font-size: 0.9rem;
+            color: var(--text-gray, #c5c6c7);
+        }
+
+        .admin-table .order-id {
+            font-weight: 600;
+            color: var(--primary, #45f3ff);
+        }
+
+        .admin-table .customer-name {
+            color: var(--text-white, #ffffff);
+            font-weight: 500;
+        }
+
+        .admin-table .price {
+            font-weight: 600;
+            color: var(--accent, #20f77b);
+        }
+
+        /* ── Status badges ── */
+        .badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge--pending {
+            background: rgba(255, 215, 64, 0.12);
+            color: #ffd740;
+            border: 1px solid rgba(255, 215, 64, 0.2);
+        }
+
+        .badge--shipping {
+            background: rgba(66, 165, 245, 0.12);
+            color: #42a5f5;
+            border: 1px solid rgba(66, 165, 245, 0.2);
+        }
+
+        .badge--delivered {
+            background: rgba(32, 247, 123, 0.12);
+            color: var(--accent, #20f77b);
+            border: 1px solid rgba(32, 247, 123, 0.2);
+        }
+
+        .badge--cancelled {
+            background: rgba(255, 82, 82, 0.12);
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.2);
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-gray, #c5c6c7);
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div th:replace="~{admin/layout :: sidebar}"></div>
+
+    <!-- Topbar -->
+    <div th:replace="~{admin/layout :: topbar('Dashboard')}"></div>
+
+    <!-- Main content -->
+    <main class="admin-content">
+        <div class="admin-content__inner">
+
+            <!-- ── Stats cards ── -->
+            <div class="stats-grid">
+                <!-- Total Revenue -->
+                <div class="stat-card">
+                    <div class="stat-card__icon stat-card__icon--green">
+                        <i class="fas fa-money-bill-trend-up"></i>
+                    </div>
+                    <div class="stat-card__info">
+                        <span class="stat-card__label">Tổng Doanh Thu</span>
+                        <span class="stat-card__value stat-card__value--green"
+                              th:text="${#numbers.formatDecimal(totalRevenue != null ? totalRevenue : 0, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                    </div>
+                </div>
+
+                <!-- Total Orders -->
+                <div class="stat-card">
+                    <div class="stat-card__icon stat-card__icon--cyan">
+                        <i class="fas fa-cart-shopping"></i>
+                    </div>
+                    <div class="stat-card__info">
+                        <span class="stat-card__label">Tổng Đơn Hàng</span>
+                        <span class="stat-card__value stat-card__value--cyan"
+                              th:text="${totalOrders != null ? totalOrders : 0}">0</span>
+                    </div>
+                </div>
+
+                <!-- Total Products -->
+                <div class="stat-card">
+                    <div class="stat-card__icon stat-card__icon--orange">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div class="stat-card__info">
+                        <span class="stat-card__label">Tổng Sản Phẩm</span>
+                        <span class="stat-card__value stat-card__value--orange"
+                              th:text="${totalProducts != null ? totalProducts : 0}">0</span>
+                    </div>
+                </div>
+
+                <!-- Total Categories -->
+                <div class="stat-card">
+                    <div class="stat-card__icon stat-card__icon--purple">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-card__info">
+                        <span class="stat-card__label">Tổng Danh Mục</span>
+                        <span class="stat-card__value stat-card__value--purple"
+                              th:text="${totalCategories != null ? totalCategories : 0}">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Order status breakdown ── -->
+            <div class="section-header">
+                <div class="section-header__bar"></div>
+                <h2 class="section-header__title">Trạng thái Đơn hàng</h2>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-card status-card--pending">
+                    <div class="status-card__value" th:text="${pendingOrders != null ? pendingOrders : 0}">0</div>
+                    <div class="status-card__label">Chờ xử lý</div>
+                </div>
+                <div class="status-card status-card--shipping">
+                    <div class="status-card__value" th:text="${shippingOrders != null ? shippingOrders : 0}">0</div>
+                    <div class="status-card__label">Đang giao</div>
+                </div>
+                <div class="status-card status-card--delivered">
+                    <div class="status-card__value" th:text="${deliveredOrders != null ? deliveredOrders : 0}">0</div>
+                    <div class="status-card__label">Đã giao</div>
+                </div>
+                <div class="status-card status-card--cancelled">
+                    <div class="status-card__value" th:text="${cancelledOrders != null ? cancelledOrders : 0}">0</div>
+                    <div class="status-card__label">Đã hủy</div>
+                </div>
+            </div>
+
+            <!-- ── Recent orders table ── -->
+            <div class="table-card">
+                <div class="table-card__header">
+                    <div class="section-header" style="margin-bottom: 0;">
+                        <div class="section-header__bar"></div>
+                        <h2 class="section-header__title">Đơn hàng gần đây</h2>
+                    </div>
+                </div>
+
+                <div th:if="${recentOrders != null and !recentOrders.isEmpty()}">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>SĐT</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày đặt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${recentOrders}">
+                                <td class="order-id" th:text="'#' + ${order.id}">
+                                    #1
+                                </td>
+                                <td class="customer-name" th:text="${order.customerName}">
+                                    Nguyễn Văn A
+                                </td>
+                                <td th:text="${order.phoneNumber}">
+                                    0901234567
+                                </td>
+                                <td class="price"
+                                    th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
+                                    500,000 ₫
+                                </td>
+                                <td>
+                                    <span class="badge badge--pending"
+                                          th:if="${order.status == 'PENDING'}"
+                                          th:text="'Chờ xử lý'">Chờ xử lý</span>
+                                    <span class="badge badge--shipping"
+                                          th:if="${order.status == 'SHIPPING'}"
+                                          th:text="'Đang giao'">Đang giao</span>
+                                    <span class="badge badge--delivered"
+                                          th:if="${order.status == 'DELIVERED'}"
+                                          th:text="'Đã giao'">Đã giao</span>
+                                    <span class="badge badge--cancelled"
+                                          th:if="${order.status == 'CANCELLED'}"
+                                          th:text="'Đã hủy'">Đã hủy</span>
+                                </td>
+                                <td th:text="${#dates.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                    01/01/2024 10:00
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${recentOrders == null or recentOrders.isEmpty()}" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Chưa có đơn hàng nào</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</body>
+</html>

@@ -2,6 +2,10 @@ package com.goodminton.config;
 
 import com.goodminton.entity.Category;
 import com.goodminton.entity.Product;
+import com.goodminton.entity.User;
+import com.goodminton.repository.CategoryRepository;
+import com.goodminton.repository.ProductRepository;
+import com.goodminton.repository.UserRepository;
 import com.goodminton.repository.CategoryRepository;
 import com.goodminton.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +24,23 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public void run(String... args) throws Exception {
-        // Xóa sạch bản ghi cũ để đồng bộ lại dữ liệu chuẩn mới
-        productRepository.deleteAll();
-        categoryRepository.deleteAll();
+        // Tạo tài khoản Admin mặc định nếu chưa có
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            User admin = new User(null, "admin", "admin", "ADMIN");
+            userRepository.save(admin);
+            System.out.println(">>> Đã tạo tài khoản Admin mặc định: admin/admin");
+        }
+
+        // Chỉ seed dữ liệu mẫu khi database chưa có sản phẩm/danh mục.
+        if (productRepository.count() > 0 || categoryRepository.count() > 0) {
+            System.out.println(">>> Sample data already exists. Skip seeding products and categories.");
+            return;
+        }
             
         // 1. Tạo 5 danh mục tương ứng với các folder ảnh của bạn
         Category vot = new Category(null, "Vợt cầu lông", "Các dòng vợt từ Yonex, Lining, Victor", null);

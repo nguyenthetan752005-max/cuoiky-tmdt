@@ -28,7 +28,7 @@
 
             <div class="header-actions">
                 <!-- Tra cứu đơn hàng link -->
-                <a href="#" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
+                <a th:href="@{/tracking}" style="font-weight: 600; font-size: 15px; color: var(--text-gray);" class="filter-link">
                     <i class="fa-solid fa-truck" style="margin-right: 5px;"></i> Tra cứu
                 </a>
                 <!-- Cart Button -->
@@ -246,6 +246,7 @@
                 alert('Giỏ hàng của bạn đang trống!');
                 return;
             }
+            window.location.href = '/checkout';
             alert('Đang chuyển hướng đến trang thanh toán...');
             // Khi có màn hình Checkout, chúng ta sẽ chuyển hướng về /checkout
         }
