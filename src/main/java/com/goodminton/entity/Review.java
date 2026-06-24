@@ -17,6 +17,7 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Product product;
 
     // Do khách hàng mua không cần tạo tài khoản, ta lưu tên người đánh giá
